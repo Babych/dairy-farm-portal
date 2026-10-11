@@ -2,52 +2,59 @@
 
 Public portal & overview of the Next-Generation Dairy Herd Management & Telemetry System.
 
-## 🌐 Live Portal Access
-Access the live production cloud portal and API:
-👉 **[https://dairy-farm-portal.pages.dev](https://dairy-farm-portal.pages.dev)**
-
-- **Architecture:** Cloudflare Pages + Cloudflare D1 Global Edge (EEUR/FRA)
-- **High-Performance Parser Microservice:** Google Cloud Run (`europe-west3`, Frankfurt)
-- **Support & Admin Contact:** `memory1024@gmail.com`
+## 🌐 Live Production Access
+- 👉 **Live Portal:** [https://dairy-farm-portal.pages.dev](https://dairy-farm-portal.pages.dev)
+- **Edge Runtime:** Cloudflare Pages + Cloudflare D1 Global Edge (EEUR/Frankfurt)
+- **Converter Microservice:** Google Cloud Run (`europe-west3`, Frankfurt am Main)
+- **Primary Maintainer:** `memory1024@gmail.com`
 
 ---
 
-## 🌟 Overview
-DairyERP Cloud is a modern, high-performance web platform designed to replace legacy 20-year-old desktop farm software (such as Uniform-Agri / Delphi / Firebird stacks).
-
-### Key Features:
-- 🔄 **One-Click Ingestion & Parser-as-a-Service:** Direct migration tool from legacy Uniform-Agri farm backups (`.zip` / `.fdb`) via stateless Google Cloud Run Firebird converter microservice (`POST /api/convert/uniform`) in **~1.5s**.
-- 📊 **Veterinary KPI & ECI Reproduction Analytics:** Real-time Calving Interval trends, ECI conception charts, days in milk (DIM), and automated conception tracking.
-- 🧪 **Automated Drug Withholding Tracking (Каренція):** Real-time monitoring of active milk and slaughter withdrawal periods for treated cows.
-- 👥 **Multi-Farm Scoping & Account Binding:** Multiple farm databases per user, instant farm switching, and automated ownership binding.
-- 🔐 **Zero Trust Security:** Mutual secret key verification (`X-Parser-Secret`), Google One Tap OAuth 2.0, and JWT session protection with role-based access control.
+## 🌟 Key Capabilities
+- ⚡ **Zero-Friction Ingestion:** Automated binary converter for legacy Uniform-Agri backups (`.zip` / `.fdb`) via Cloud Run stateless microservice in **~1.5 seconds**.
+- 📈 **Veterinary & Reproductive KPIs:** Real-time Calving Interval trends, ECI conception curves, Days in Milk (DIM), and automated heat detection alerts.
+- 💊 **Antibiotic Withholding Watch (Каренція):** Automatic biological countdown timers for milk and slaughter quarantine periods.
+- 🏢 **Multi-Tenant Herd Scoping:** Complete tenant isolation per user/farm, dynamic passport editing, and instantaneous farm context switching.
+- 🔒 **Zero-Trust Security & WebCrypto:** Cryptographic password salting with **PBKDF2 (SHA-256)** and session signing via **HMAC-SHA256**. Zero plaintext credentials or hardcoded keys in repository.
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Architecture & Feature Collocation
+Structured with 1-level feature collocation optimized for modern AI pair-programming and human review:
+
 ```
-[ User Browser / Mobile PWA ]
-              ↓ (HTTPS)
-[ Cloudflare Pages SPA (portal.html) ]
-              ↕ (Edge Functions API)
-[ Cloudflare D1 Relational DB (EEUR) ]
-              ↑ (Stateless JSON Stream via X-Parser-Secret)
-[ Google Cloud Run Parser Microservice (Frankfurt / europe-west3) ]
-              ↑ (Upload .FDB / .ZIP)
-[ Uniform-Agri Legacy Farm Backup ]
+functions/api/
+├── [[route]].js    # Lean Edge router & context dispatcher (~100 lines)
+├── animals.js      # Herd inventory, filtering, card view & animal history
+├── farms.js        # Multi-farm switching, CRUD, and farm passport updates
+├── dashboard.js    # Statistics, event journal, medication actions & alerts
+├── auth.js         # Google One-Tap OAuth, first-run setup & session issuance
+├── system.js       # System health, access telemetry & parser microservice forwarder
+├── zootech.js      # Pure mathematical engine (DIM, gestation, dry-off, quarantine)
+└── crypto.js       # Native WebCrypto implementation (PBKDF2 & HMAC-SHA256)
 ```
 
 ---
 
-## 🧪 Testing & Verification
-The system is continuously verified using two automated test suites:
-1. **Edge & D1 Test (`test_health_check.js`):**
-   - Asserts system availability & farm stats (`/api/system/status`, `/api/dashboard/stats`).
-   - Asserts Cloudflare Pages Functions router & D1 query integrity.
-2. **Parser Integration Test (`test_parser_integration.js`):**
-   - Asserts Cloud Run `/health` status (HTTP 200).
-   - Asserts 403 Forbidden security rejection for unauthorized requests.
-   - Asserts end-to-end binary parsing of real Firebird backups within 2 seconds.
+## 🧪 Testing & CI/CD Pipeline
+Continuous integration runs on **Node.js 24 native GitHub Actions (`v7`)**:
+
+1. **Unit Testing:**
+   ```bash
+   npm test
+   ```
+   Runs 21 pure zootechnical and WebCrypto security tests via the native Node.js test runner (`node:test`) in **~200ms**.
+
+2. **Edge Build Verification:**
+   ```bash
+   npx wrangler pages functions build
+   ```
+   Validates functions bundling, syntax, and D1 compatibility.
+
+3. **Cloudflare Deployment Secrets (GitHub Actions):**
+   Add these under **Settings > Secrets and variables > Actions > Repository secrets**:
+   - `CLOUDFLARE_API_TOKEN` — Cloudflare API token with Pages edit permissions.
+   - `CLOUDFLARE_ACCOUNT_ID` — Your Cloudflare Account ID (`da9d897a45e91c7e95572db2423e01fa`).
 
 ---
 
