@@ -3962,6 +3962,13 @@
                 });
             }
 
+            // Hide Install App button if already running as installed standalone PWA
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+            if (isStandalone) {
+                const headerInstall = document.getElementById('headerInstallBtn');
+                if (headerInstall) headerInstall.classList.add('hidden');
+            }
+
             // Capture install prompt for PWA installation button
             window.addEventListener('beforeinstallprompt', (e) => {
                 e.preventDefault();
