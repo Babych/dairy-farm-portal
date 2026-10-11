@@ -63,6 +63,13 @@ Any edits to livestock formulas in `functions/api/[[route]].js` or `test/zootech
 - Never manually hardcode version strings in `sw.js`.
 - Always run `npm run build` which triggers `node scripts/stamp-sw.js` to stamp `CACHE_VERSION = 'dairy-erp-v<git-sha>-<timestamp>'`.
 
+### 5. 📉 Consumption Plan & Index Guardrails (Cloudflare D1 / Rows Read Quota)
+Cloudflare D1 charges by **Rows Read** (free tier: 5M rows/day). A single unindexed full-table scan can exhaust the entire daily quota in minutes:
+- **Mandatory Indexing for New Filters & Sorts**: Whenever adding a new filter (`WHERE column = ?`) or sorting (`ORDER BY column`), you **MUST** create a corresponding index in `schema_d1.sql` (e.g. `CREATE INDEX IF NOT EXISTS idx_animals_farm_status ON animals(farm_id, current_status);`).
+- **Composite Farm Scoping**: All queries are multi-tenant; always prefix indexes with `farm_id` so rows are scoped immediately.
+- **Enforce Strict `LIMIT`**: Never execute unpaged `SELECT *` queries. Always supply sensible defaults (`LIMIT 50 OFFSET ?`).
+- **Leverage Client SW Cache**: Never bypass the Service Worker's `Stale-While-Revalidate` cache for read-only catalog endpoints (`/api/animals`, `/api/dashboard/stats`).
+
 ---
 
 ## 🧪 Verification Protocol
