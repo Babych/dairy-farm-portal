@@ -99,6 +99,38 @@ export async function handleSystem({ path, method, request, url, env, db, jsonRe
         return jsonResponse({ status: "success", message: "Логи успішно очищено" });
     }
 
+    // 3.1 POST /api/system/client-logs (Stream UI errors & actions into Cloudflare Tail logs & D1)
+    if (path === "/api/system/client-logs" && method === "POST") {
+        try {
+            const body = await request.json().catch(() => ({}));
+            const level = (body.level || "ERROR").toUpperCase();
+            const message = body.message || "Unknown client error";
+            const details = body.details || "";
+            const device = body.device || request.headers.get("user-agent") || "Unknown Device";
+            const urlSource = body.url || "";
+            const category = body.category || "CLIENT_UI";
+            const logId = crypto.randomUUID();
+
+            // This console.log immediately outputs to Cloudflare `wrangler pages deployment tail` stream!
+            console.log(`[📱 CLIENT ${level}] [${category}] ${message} | Dev: ${device} | URL: ${urlSource} | Trace: ${details}`);
+
+            // Also persist to system_logs table in D1
+            try {
+                await db.prepare(`
+                    INSERT INTO system_logs (id, level, category, message, details, created_at)
+                    VALUES (?, ?, ?, ?, ?, datetime('now'))
+                `).bind(logId, level, category, `${message} (${device.slice(0, 80)})`, details).run();
+            } catch (dbErr) {
+                console.warn("[DB Log Insert Warn]", dbErr.message);
+            }
+
+            return jsonResponse({ status: "logged", id: logId });
+        } catch (err) {
+            console.error("[Client Log Handler Error]", err.message);
+            return jsonResponse({ status: "error", message: err.message }, 400);
+        }
+    }
+
     // 4. GET /api/system/audit-logs
     if (path === "/api/system/audit-logs" && method === "GET") {
         const logs = (await db.prepare("SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT 100").all()).results;

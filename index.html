@@ -1839,6 +1839,42 @@
             }
         }
 
+        // Global Client Error & Telemetry Logger (Streams device errors directly into Cloudflare Tail logs)
+        function sendClientLog(level, message, details = "", category = "CLIENT_UI") {
+            try {
+                const payload = {
+                    level,
+                    message,
+                    details: details || "",
+                    device: `${navigator.userAgent} (${window.innerWidth}x${window.innerHeight})`,
+                    url: window.location.href,
+                    category
+                };
+                if (navigator.sendBeacon) {
+                    navigator.sendBeacon('/api/system/client-logs', JSON.stringify(payload));
+                } else {
+                    fetch('/api/system/client-logs', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                        keepalive: true
+                    }).catch(() => {});
+                }
+            } catch (e) {}
+        }
+
+        window.addEventListener('error', (event) => {
+            const msg = event.message || "Unknown Script Error";
+            const file = event.filename ? `${event.filename}:${event.lineno}:${event.colno}` : "";
+            sendClientLog("ERROR", msg, `${file} | Stack: ${event.error?.stack || ''}`, "RUNTIME_ERROR");
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+            const reason = event.reason;
+            const msg = reason?.message || String(reason) || "Unhandled Promise Rejection";
+            sendClientLog("ERROR", `Unhandled Rejection: ${msg}`, reason?.stack || '', "PROMISE_ERROR");
+        });
+
         // 1. Initial State Check
         async function checkAppInit() {
             const urlParams = new URLSearchParams(window.location.search);
