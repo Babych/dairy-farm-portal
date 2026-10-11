@@ -71,6 +71,12 @@
                 <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                 <span id="headerUserEmail" class="truncate max-w-[150px]"></span>
             </div>
+            <!-- Network Connection & Offline Outbox Status Pill -->
+            <div id="headerNetworkStatus" class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 transition">
+                <span id="networkStatusDot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span id="networkStatusText" class="hidden sm:inline">Онлайн</span>
+                <span id="offlineOutboxBadge" class="hidden bg-amber-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold ml-0.5">0</span>
+            </div>
             <!-- PWA Install / Offline Info Button -->
             <button id="headerInstallBtn" onclick="openInstallModal()" title="Встановити додаток на смартфон / Офлайн доступ" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
                 <i class="fa-solid fa-mobile-screen-button text-emerald-600"></i> <span class="hidden sm:inline" data-i18n="installAppBtn">Встановити апп</span><span class="sm:hidden text-[11px]">Апп</span>
@@ -3964,8 +3970,172 @@
                 if (installBtn) installBtn.classList.remove('hidden');
             });
 
+            // Initialize Network and Offline Outbox listeners
+            setupNetworkSyncListeners();
+
             checkAppInit();
         });
+
+        // --- Offline Outbox & Network Sync Architecture ---
+        function getOfflineQueue() {
+            try {
+                return JSON.parse(localStorage.getItem('dairy_offline_queue') || '[]');
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveOfflineQueue(queue) {
+            localStorage.setItem('dairy_offline_queue', JSON.stringify(queue));
+            updateNetworkStatusUI();
+        }
+
+        function updateNetworkStatusUI() {
+            const statusPill = document.getElementById('headerNetworkStatus');
+            const dot = document.getElementById('networkStatusDot');
+            const txt = document.getElementById('networkStatusText');
+            const badge = document.getElementById('offlineOutboxBadge');
+            const queue = getOfflineQueue();
+            const isOnline = navigator.onLine;
+
+            if (!statusPill) return;
+
+            if (isOnline) {
+                if (queue.length > 0) {
+                    statusPill.className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200 transition cursor-pointer';
+                    dot.className = 'w-2 h-2 rounded-full bg-amber-500 animate-pulse';
+                    txt.textContent = 'Синхронізація';
+                    badge.classList.remove('hidden');
+                    badge.textContent = queue.length;
+                    statusPill.title = `Є ${queue.length} невідправлених записів. Натисніть для примусової відправки`;
+                    statusPill.onclick = flushOfflineQueue;
+                } else {
+                    statusPill.className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 transition';
+                    dot.className = 'w-2 h-2 rounded-full bg-emerald-500';
+                    txt.textContent = 'Онлайн';
+                    badge.classList.add('hidden');
+                    statusPill.title = 'Підключено до хмари Cloudflare';
+                    statusPill.onclick = null;
+                }
+            } else {
+                statusPill.className = 'flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold bg-amber-100 text-amber-900 border border-amber-300 transition';
+                dot.className = 'w-2 h-2 rounded-full bg-amber-600';
+                txt.textContent = 'Офлайн (Корівник)';
+                if (queue.length > 0) {
+                    badge.classList.remove('hidden');
+                    badge.textContent = queue.length;
+                } else {
+                    badge.classList.add('hidden');
+                }
+                statusPill.title = 'Немає зв’язку. Дані надійно зберігаються на пристрої';
+                statusPill.onclick = null;
+            }
+        }
+
+        function setupNetworkSyncListeners() {
+            window.addEventListener('online', () => {
+                showToast('Зв’язок відновлено! Перевірка черги синхронізації...', 'info');
+                updateNetworkStatusUI();
+                flushOfflineQueue();
+            });
+
+            window.addEventListener('offline', () => {
+                showToast('Зв’язок відсутній. Увімкнено офлайн-режим збереження 💾', 'warning');
+                updateNetworkStatusUI();
+            });
+
+            updateNetworkStatusUI();
+        }
+
+        async function flushOfflineQueue() {
+            const queue = getOfflineQueue();
+            if (queue.length === 0 || !navigator.onLine) return;
+
+            let sentCount = 0;
+            const remaining = [];
+
+            for (const item of queue) {
+                try {
+                    const res = await fetch(item.url, {
+                        method: item.method || 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(item.payload)
+                    });
+                    if (res.ok) {
+                        sentCount++;
+                    } else if (res.status >= 400 && res.status < 500) {
+                        // Client error (e.g. invalid cow ID) - log and do not loop endlessly
+                        console.warn('[Offline Queue] Discarding invalid request:', item, res.status);
+                    } else {
+                        // Server temporary error (500/503), retain in queue
+                        remaining.push(item);
+                    }
+                } catch (err) {
+                    remaining.push(item);
+                }
+            }
+
+            saveOfflineQueue(remaining);
+
+            if (sentCount > 0) {
+                showToast(`Синхронізовано з хмарою: ${sentCount} записів! 🚀`, 'success');
+                // Refresh current tab data
+                if (typeof loadAnimals === 'function' && currentTab === 'animals') loadAnimals();
+                if (typeof loadStats === 'function') loadStats();
+            }
+        }
+
+        // Wrapper function for mutations: executes immediately or enqueues if offline
+        async function sendOrQueueMutation(url, method, payload, successMessage) {
+            if (!navigator.onLine) {
+                const queue = getOfflineQueue();
+                queue.push({
+                    id: Date.now().toString(36) + Math.random().toString(36).substring(2, 6),
+                    url,
+                    method,
+                    payload,
+                    timestamp: new Date().toISOString()
+                });
+                saveOfflineQueue(queue);
+                showToast(`Збережено на телефоні 💾 (буде передано автоматично при появі зв'язку)`, 'warning');
+                return { success: true, offline: true };
+            }
+
+            try {
+                const res = await fetch(url, {
+                    method: method || 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok) {
+                    showToast(successMessage || 'Дію успішно збережено в хмарі ✓', 'success');
+                    return { success: true, data };
+                } else {
+                    showToast(data.detail || data.error || 'Помилка збереження даних', 'error');
+                    return { success: false, data };
+                }
+            } catch (err) {
+                // Network dropped mid-request: save to offline queue
+                const queue = getOfflineQueue();
+                queue.push({
+                    id: Date.now().toString(36) + Math.random().toString(36).substring(2, 6),
+                    url,
+                    method,
+                    payload,
+                    timestamp: new Date().toISOString()
+                });
+                saveOfflineQueue(queue);
+                showToast(`Зв'язок перервано. Запис збережено на телефоні 💾`, 'warning');
+                return { success: true, offline: true };
+            }
+        }
 
         function openInstallModal() {
             document.getElementById('installModal').classList.remove('hidden');
