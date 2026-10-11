@@ -1,11 +1,9 @@
 // DairyERP Service Worker (PWA Offline & Instant Cache)
 // Auto-incremented build token:
-const CACHE_VERSION = 'dairy-erp-v9540496-mv49u5l3';
+const CACHE_VERSION = 'dairy-erp-v087e613-mv4b74nu';
 
 const PRECACHE_ASSETS = [
   '/',
-  '/index.html',
-  '/portal.html',
   '/manifest.json',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
@@ -91,10 +89,11 @@ self.addEventListener('fetch', (event) => {
         return cachedResponse;
       }
       return fetch(req).then((networkResponse) => {
-        // Cache successful local assets and CDN resources
+        // If response is redirected or opaque, do not cache bad redirect headers for HTML
         if (
           networkResponse &&
           networkResponse.status === 200 &&
+          !networkResponse.redirected &&
           (url.origin === self.location.origin || url.hostname.includes('cdn') || url.hostname.includes('googleapis'))
         ) {
           const clone = networkResponse.clone();
@@ -104,7 +103,7 @@ self.addEventListener('fetch', (event) => {
       }).catch(() => {
         // Offline fallback for HTML navigation
         if (req.mode === 'navigate') {
-          return caches.match('/portal.html') || caches.match('/index.html');
+          return caches.match('/');
         }
       });
     })
