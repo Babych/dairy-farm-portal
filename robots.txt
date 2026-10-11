@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://dairy-farm-portal.pages.dev/sitemap.xml

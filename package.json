@@ -1,0 +1,15 @@
+{
+  "name": "dairy-farm-portal",
+  "version": "2.5.0",
+  "description": "DairyERP Portal - Cloud Herd Management and Uniform-Agri Import",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "test:integration": "node test_health_check.js",
+    "build": "npx wrangler pages functions build",
+    "deploy": "npx wrangler pages deploy . --project-name=dairy-farm-portal"
+  },
+  "keywords": ["dairy", "cattle", "uniform-agri", "cloudflare-pages", "cloudflare-d1"],
+  "author": "Dmytro Babych <memory1024@gmail.com>",
+  "license": "UNLICENSED"
+}

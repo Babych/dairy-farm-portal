@@ -1,0 +1,23 @@
+# Cloudflare & Wrangler cache
+.wrangler/
+
+# Build & static files
+dist/
+build/
+.cache/
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Cloudflare Pages local build artifacts
+_worker.bundle
+_worker.js
+
+# Environment variables & local secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
