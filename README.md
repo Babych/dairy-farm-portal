@@ -20,18 +20,23 @@ Public portal & overview of the Next-Generation Dairy Herd Management & Telemetr
 ---
 
 ## 🏗️ Architecture & Feature Collocation
-Structured with 1-level feature collocation optimized for modern AI pair-programming and human review:
+Structured with clean feature collocation and PWA offline support:
 
 ```
-functions/api/
-├── [[route]].js    # Lean Edge router & context dispatcher (~100 lines)
-├── animals.js      # Herd inventory, filtering, card view & animal history
-├── farms.js        # Multi-farm switching, CRUD, and farm passport updates
-├── dashboard.js    # Statistics, event journal, medication actions & alerts
-├── auth.js         # Google One-Tap OAuth, first-run setup & session issuance
-├── system.js       # System health, access telemetry & parser microservice forwarder
-├── zootech.js      # Pure mathematical engine (DIM, gestation, dry-off, quarantine)
-└── crypto.js       # Native WebCrypto implementation (PBKDF2 & HMAC-SHA256)
+├── functions/api/     # Cloudflare Pages Functions (V8 Edge Workers)
+│   ├── [[route]].js   # Lean Edge router & context dispatcher
+│   ├── animals.js     # Herd inventory, filtering, card view & animal history
+│   ├── farms.js       # Multi-farm switching, CRUD, and farm passport updates
+│   ├── dashboard.js   # Statistics, event journal, medication actions & alerts
+│   ├── auth.js        # Google One-Tap OAuth, first-run setup & session issuance
+│   ├── system.js      # System health & parser microservice forwarder
+│   ├── zootech.js     # Pure mathematical engine (DIM, gestation, dry-off, quarantine)
+│   └── crypto.js      # Native WebCrypto implementation (PBKDF2 & HMAC-SHA256)
+├── portal.html        # Main authenticated SPA interface
+├── sw.js              # Service Worker (PWA offline caching & outbox sync)
+├── manifest.json      # Mobile Web App Manifest
+├── schema_d1.sql      # Cloudflare D1 SQLite relational schema
+└── AGENTIC.md         # AI Agentic engineering rules & guardrails
 ```
 
 ---
@@ -43,13 +48,13 @@ Continuous integration runs on **Node.js 24 native GitHub Actions (`v7`)**:
    ```bash
    npm test
    ```
-   Runs 21 pure zootechnical and WebCrypto security tests via the native Node.js test runner (`node:test`) in **~200ms**.
+   Runs 21 pure zootechnical and WebCrypto security tests via the native Node.js test runner (`node:test`) in **~150ms**.
 
-2. **Edge Build Verification:**
+2. **PWA & Edge Bundle Build:**
    ```bash
-   npx wrangler pages functions build
+   npm run build
    ```
-   Validates functions bundling, syntax, and D1 compatibility.
+   Stamps automated Service Worker cache version (`scripts/stamp-sw.js`) and validates Pages Functions compilation.
 
 3. **Cloudflare Deployment Secrets (GitHub Actions):**
    Add these under **Settings > Secrets and variables > Actions > Repository secrets**:
