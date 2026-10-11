@@ -56,9 +56,9 @@
             </div>
             <div class="min-w-0">
                 <h1 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-1.5 sm:gap-2 group-hover:text-emerald-700 transition leading-tight truncate">
-                    DairyERP <span class="text-[10px] sm:text-[11px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded-full font-semibold">v2.5</span>
+                    DairyERP
                 </h1>
-                <p class="text-[11px] sm:text-xs text-slate-500 font-medium truncate max-w-[160px] sm:max-w-none" data-i18n="headerSubtitle">Cloud Production • Хмарна база Cloudflare D1 & Edge Workers</p>
+                <p class="text-[11px] sm:text-xs text-slate-500 font-medium truncate" data-i18n="headerSubtitle">Управління молочною фермою та облік стада</p>
             </div>
         </a>
         <div id="authHeaderArea" class="flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">
@@ -143,7 +143,7 @@
     </div>
 
     <!-- 1. LOGIN SCREEN -->
-    <div id="loginScreen" class="hidden flex-1 flex items-center justify-center p-6">
+    <div id="loginScreen" class="flex-1 flex items-center justify-center p-6">
         <div class="bg-white border border-slate-200 rounded-3xl p-8 max-w-md w-full shadow-xl space-y-6 text-center">
             <div class="space-y-2">
                 <div class="w-14 h-14 mx-auto rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-2xl font-bold shadow-sm">
@@ -153,14 +153,14 @@
                 <p class="text-xs text-slate-500 max-w-xs mx-auto" data-i18n="loginSubtitle">Безпечний доступ до кабінету ферми за допомогою Google облікового запису</p>
             </div>
 
-            <!-- Google Sign-In Container (min-h reserves height to eliminate ~0.5s layout shift on mobile) -->
-            <div class="flex flex-col items-center justify-center py-2 space-y-3 min-h-[48px]">
+            <!-- Google Sign-In Container (Strictly fixed height 44px so buttons below never shift) -->
+            <div class="flex flex-col items-center justify-center h-[44px] w-full overflow-hidden">
                 <div id="g_id_onload"
                      data-client_id="733707845450-vui70uu318k17qvfjicu4tb5q2dsdrdg.apps.googleusercontent.com"
                      data-callback="handleGoogleCredentialResponse"
                      data-auto_prompt="false">
                 </div>
-                <div class="g_id_signin w-full flex justify-center min-h-[44px]" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with" data-shape="pill" data-logo_alignment="left"></div>
+                <div class="g_id_signin w-full flex justify-center h-[44px]" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with" data-shape="pill" data-logo_alignment="left"></div>
             </div>
 
             <div class="relative flex py-1 items-center">
@@ -3778,7 +3778,7 @@
                 loginOrDemo: "або ознайомлення",
                 loginTryDemo: "Спробувати демо-режим (Без реєстрації)",
                 loginNotice: "Для нового користувача автоматично створюється особиста база ферми з можливістю імпорту бекапу Uniform-Agri.",
-                headerSubtitle: "Cloud Production • Хмарна база Cloudflare D1 & Edge Workers",
+                headerSubtitle: "Управління молочною фермою та облік стада",
                 footerText: "DairyERP Enterprise Platform • Інтеграція та сумісність з базами Uniform-Agri (ВРХ)",
                 footerAboutBtn: "Про систему & Контакти",
                 aboutModalTitle: "DairyERP Portal Engine",
@@ -3928,7 +3928,7 @@
                 loginOrDemo: "or explore",
                 loginTryDemo: "Try Demo Mode (No registration needed)",
                 loginNotice: "For new users, a private empty farm workspace is created automatically with Uniform-Agri backup import support.",
-                headerSubtitle: "Cloud Production • Cloudflare D1 Database & Edge Workers",
+                headerSubtitle: "Dairy Herd Management & Livestock Intelligence",
                 footerText: "DairyERP Enterprise Platform • Integrated with Uniform-Agri Herd Databases",
                 footerAboutBtn: "About System & Contacts",
                 aboutModalTitle: "DairyERP Portal Engine",
