@@ -70,6 +70,14 @@ Cloudflare D1 charges by **Rows Read** (free tier: 5M rows/day). A single uninde
 - **Enforce Strict `LIMIT`**: Never execute unpaged `SELECT *` queries. Always supply sensible defaults (`LIMIT 50 OFFSET ?`).
 - **Leverage Client SW Cache**: Never bypass the Service Worker's `Stale-While-Revalidate` cache for read-only catalog endpoints (`/api/animals`, `/api/dashboard/stats`).
 
+### 6. 🏛️ Architectural Invariants & Historical Gotchas
+- **🟡 Graceful Degradation over Hard Failures**: External D1 quota exhaustions (`500`) must be caught gracefully and marked with yellow non-blocking warnings in integration tests. Never fail the entire CI pipeline due to upstream cloud provider rate-limits.
+- **⚡ Native WebCrypto Only on Edge**: Cloudflare Pages Functions run in a V8 isolate. Never attempt `npm install bcrypt` or `jsonwebtoken`; all auth and hashing is done strictly via native `crypto.subtle` (PBKDF2 with salt + HMAC-SHA256).
+- **📦 32 MB Cloud Run Body Limit**: Google Cloud Run rejects payloads > 32 MB. Never bypass client-side gzip/deflate compression (`fflate` in `portal.html`) before uploading Firebird `.FDB` files to `/api/convert/uniform`.
+- **📱 Two-Tier `flex-wrap` UX (No Horizontal Scrollbars)**: Navigating cattle barns on mobile devices requires high visibility. Header tabs must wrap into two distinct floors (`flex-wrap`) rather than hiding behind a single horizontal scroll line (`overflow-x-auto`).
+- **💾 All Mutations Must Use `sendOrQueueMutation`**: Never call raw `fetch()` directly for animal health or repro forms. Always route through `sendOrQueueMutation(url, method, payload)` so data is safely written to the offline outbox if the farm Wi-Fi drops.
+- **🚫 Hermetic GitHub Actions Deployment**: Deployment is orchestrated exclusively by `.github/workflows/ci.yml` via `wrangler pages deploy`. Never re-enable or attempt to fix direct Cloudflare Git build hooks (`dairy-farm-db deployments`).
+
 ---
 
 ## 🧪 Verification Protocol
