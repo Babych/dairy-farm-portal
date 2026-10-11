@@ -6,7 +6,8 @@
   "scripts": {
     "test": "node --test test/*.test.js",
     "test:integration": "node test_health_check.js",
-    "build": "npx wrangler pages functions build",
+    "build:sw": "node scripts/stamp-sw.js",
+    "build": "npm run build:sw && npx wrangler pages functions build",
     "deploy": "npx wrangler pages deploy . --project-name=dairy-farm-portal"
   },
   "keywords": ["dairy", "cattle", "uniform-agri", "cloudflare-pages", "cloudflare-d1"],

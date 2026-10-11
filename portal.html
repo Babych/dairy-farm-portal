@@ -17,6 +17,15 @@
     <meta property="og:description" content="Прямий імпорт Firebird баз (.FDB) Uniform-Agri в захищену хмару. Мобільний кабінет ферми без встановлення старого софту.">
     <meta property="og:image" content="https://dairy-farm-portal.pages.dev/og-image.png">
 
+    <!-- PWA & Mobile Web App -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#10b981">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="DairyERP">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:title" content="DairyERP Portal — Онлайн облік стада Uniform-Agri">
@@ -62,6 +71,10 @@
                 <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                 <span id="headerUserEmail" class="truncate max-w-[150px]"></span>
             </div>
+            <!-- PWA Install / Offline Info Button -->
+            <button id="headerInstallBtn" onclick="openInstallModal()" title="Встановити додаток на смартфон / Офлайн доступ" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-mobile-screen-button text-emerald-600"></i> <span class="hidden sm:inline" data-i18n="installAppBtn">Встановити апп</span><span class="sm:hidden text-[11px]">Апп</span>
+            </button>
             <!-- Backup download button (shown only when authenticated) -->
             <button id="headerBackupBtn" onclick="downloadBackup()" title="Завантажити резервну копію бази даних" class="hidden bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition items-center gap-1.5 border border-slate-200">
                 <i class="fa-solid fa-download text-emerald-600"></i> <span class="hidden sm:inline">Бекап</span>
@@ -3734,7 +3747,18 @@
                 fertilityModalSubtitle: "Динаміка міжотельного періоду, коефіцієнтів CR / PR та показників заплідненості",
                 chartEciTrendTitle: "Expected Calving Interval (ECI) Trend",
                 vetModalTitle: "Ветеринарний чекліст • Ранковий обхід стада",
-                vetModalSubtitle: "Операційний лист огляду стада"
+                vetModalSubtitle: "Операційний лист огляду стада",
+                installAppBtn: "Встановити додаток",
+                installModalTitle: "Встановлення додатку & Офлайн-робота",
+                installModalSubtitle: "Швидкий доступ без інтернету прямо в корівнику",
+                installModalDesc: "DairyERP підтримує роботу як автономний PWA-додаток. Всі сторінки та довідники кешуються на вашому телефоні, тому відкриваються миттєво навіть при слабкому зв'язку 3G/Edge у приміщеннях ферми.",
+                installModalHowTo: "Як встановити ярлик на телефон чи ПК:",
+                installModalStepAndroid: "Android / Chrome: Натисніть кнопку 'Встановити' нижче або три крапки в браузері -> 'Додати на головний екран'.",
+                installModalStepIos: "iPhone / Safari: Натисніть кнопку 'Поділитися' (іконка квадрата зі стрілкою) -> 'На екран «Додому»'.",
+                installModalStepDesktop: "ПК / Ноутбук: Натисніть іконку встановлення в адресному рядку браузера (Chrome / Edge).",
+                installModalPushTitle: "🔔 Push-сповіщення (Pro-можливості):",
+                installModalPushDesc: "Після встановлення додаток підтримує отримання оперативних сповіщень про завершення каренції молока та термінові ветеринарні задачі прямо на екран блокування.",
+                installModalBtnInstall: "Встановити зараз"
             },
             en: {
                 greeting: "Welcome",
@@ -3875,7 +3899,18 @@
                 fertilityModalSubtitle: "Calving interval dynamics, CR / PR rates and breeding efficiency",
                 chartEciTrendTitle: "Expected Calving Interval (ECI) Trend",
                 vetModalTitle: "VET Checklist • Morning Herd Round",
-                vetModalSubtitle: "Operational herd inspection sheet"
+                vetModalSubtitle: "Operational herd inspection sheet",
+                installAppBtn: "Install App",
+                installModalTitle: "App Installation & Offline Usage",
+                installModalSubtitle: "Fast offline access directly in the cattle barn",
+                installModalDesc: "DairyERP runs as a Progressive Web App (PWA). All pages and livestock catalogs are cached locally on your device, ensuring instant loads even under weak 3G/Edge barn coverage.",
+                installModalHowTo: "How to add an app shortcut:",
+                installModalStepAndroid: "Android / Chrome: Tap 'Install' below or tap the browser menu (3 dots) -> 'Add to Home screen'.",
+                installModalStepIos: "iPhone / Safari: Tap the 'Share' icon (square with arrow) -> 'Add to Home Screen'.",
+                installModalStepDesktop: "Desktop / PC: Click the install icon in your browser address bar (Chrome / Edge).",
+                installModalPushTitle: "🔔 Push Notifications (Pro Tier):",
+                installModalPushDesc: "Once installed, the app supports instant push alerts for milk withholding clearance and urgent vet round duties directly on your lock screen.",
+                installModalBtnInstall: "Install Now"
             }
         };
 
@@ -3914,8 +3949,47 @@
                 }
             }
 
+            // Register PWA Service Worker
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/sw.js').then((registration) => {
+                        console.log('[PWA] Service Worker registered successfully:', registration.scope);
+                    }).catch((error) => {
+                        console.warn('[PWA] Service Worker registration failed:', error);
+                    });
+                });
+            }
+
+            // Capture install prompt for PWA installation button
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                window.deferredPrompt = e;
+                const installBtn = document.getElementById('modalInstallActionBtn');
+                if (installBtn) installBtn.classList.remove('hidden');
+            });
+
             checkAppInit();
         });
+
+        function openInstallModal() {
+            document.getElementById('installModal').classList.remove('hidden');
+        }
+
+        async function triggerPwaInstall() {
+            if (window.deferredPrompt) {
+                window.deferredPrompt.prompt();
+                const choice = await window.deferredPrompt.userChoice;
+                if (choice.outcome === 'accepted') {
+                    showToast('Додаток успішно встановлено!', 'success');
+                }
+                window.deferredPrompt = null;
+                const installBtn = document.getElementById('modalInstallActionBtn');
+                if (installBtn) installBtn.classList.add('hidden');
+                closeModal('installModal');
+            } else {
+                showToast('Дотримуйтесь інструкцій для вашого браузера нижче', 'info');
+            }
+        }
     </script>
 
     <!-- FOOTER WITH DISCREET ABOUT / CONTACT MODAL TRIGGER -->
@@ -3929,6 +4003,68 @@
             </button>
         </div>
     </footer>
+
+    <!-- MODAL: PWA INSTALLATION & OFFLINE CACHE GUIDE -->
+    <div id="installModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 text-left">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl font-bold shadow-sm">
+                        📱
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-base leading-tight" data-i18n="installModalTitle">Встановлення додатку & Офлайн-робота</h3>
+                        <p class="text-xs text-slate-500 font-medium" data-i18n="installModalSubtitle">Швидкий доступ без інтернету прямо в корівнику</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('installModal')" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <p class="text-xs text-slate-600 leading-relaxed bg-slate-50 border border-slate-200 rounded-2xl p-3" data-i18n="installModalDesc">
+                DairyERP підтримує роботу як автономний PWA-додаток. Всі сторінки та довідники кешуються на вашому телефоні, тому відкриваються миттєво навіть при слабкому зв'язку 3G/Edge у приміщеннях ферми.
+            </p>
+
+            <div class="space-y-2">
+                <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider" data-i18n="installModalHowTo">Як встановити ярлик на телефон чи ПК:</h4>
+                <div class="text-xs text-slate-600 space-y-2">
+                    <div class="flex items-start gap-2 bg-emerald-50/50 border border-emerald-100 rounded-xl p-2.5">
+                        <i class="fa-brands fa-android text-emerald-600 mt-0.5 text-sm"></i>
+                        <span data-i18n="installModalStepAndroid"><b>Android / Chrome:</b> Натисніть кнопку "Встановити" нижче або меню браузера (3 крапки) → "Додати на головний екран".</span>
+                    </div>
+                    <div class="flex items-start gap-2 bg-blue-50/50 border border-blue-100 rounded-xl p-2.5">
+                        <i class="fa-brands fa-apple text-blue-600 mt-0.5 text-sm"></i>
+                        <span data-i18n="installModalStepIos"><b>iPhone / Safari:</b> Натисніть кнопку "Поділитися" (іконка квадрата зі стрілкою внизу) → "На екран «Додому»".</span>
+                    </div>
+                    <div class="flex items-start gap-2 bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+                        <i class="fa-solid fa-desktop text-slate-600 mt-0.5 text-sm"></i>
+                        <span data-i18n="installModalStepDesktop"><b>ПК / Ноутбук:</b> Натисніть іконку встановлення в адресному рядку браузера (Chrome / Edge).</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pro Push Notification Teaser -->
+            <div class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-3 space-y-1">
+                <div class="flex items-center gap-2 text-xs font-bold text-amber-900">
+                    <i class="fa-solid fa-bell text-amber-600"></i>
+                    <span data-i18n="installModalPushTitle">Push-сповіщення (Pro-можливості):</span>
+                </div>
+                <p class="text-[11px] text-amber-800 leading-relaxed" data-i18n="installModalPushDesc">
+                    Після встановлення додаток підтримує отримання оперативних сповіщень про завершення каренції молока та термінові ветеринарні задачі прямо на екран блокування.
+                </p>
+            </div>
+
+            <div class="flex items-center gap-2 pt-2">
+                <button id="modalInstallActionBtn" onclick="triggerPwaInstall()" class="hidden flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-semibold shadow-sm transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-download"></i> <span data-i18n="installModalBtnInstall">Встановити зараз</span>
+                </button>
+                <button onclick="closeModal('installModal')" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl text-xs font-semibold transition" data-i18n="aboutModalClose">
+                    Зрозуміло
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- MODAL: ABOUT & CONTACTS -->
     <div id="aboutModal" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">

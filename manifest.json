@@ -1,0 +1,25 @@
+{
+  "name": "DairyERP Portal — Облік стада ВРХ",
+  "short_name": "DairyERP",
+  "description": "Сучасна хмарна система управління молочною фермою (ВРХ) та імпорт баз Uniform-Agri (.FDB / .ZIP)",
+  "start_url": "/portal.html",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#10b981",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity", "utilities"]
+}

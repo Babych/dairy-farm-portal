@@ -21,8 +21,8 @@ jobs:
       - name: Run Unit Tests (Pure Zootech & WebCrypto Security)
         run: npm test
 
-      - name: Verify Cloudflare Pages Bundle Build
-        run: npx wrangler pages functions build
+      - name: Verify Cloudflare Pages Bundle Build & PWA SW Stamp
+        run: npm run build
 
   deploy-to-cloudflare:
     needs: test-and-build
