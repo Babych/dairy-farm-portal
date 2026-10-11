@@ -149,49 +149,49 @@
                 <p class="text-xs text-slate-500 max-w-xs mx-auto" data-i18n="loginSubtitle">Безпечний доступ до кабінету ферми за допомогою Google облікового запису</p>
             </div>
 
-            <!-- Google Sign-In Container (Strictly fixed height 44px so buttons below never shift) -->
-            <div class="flex flex-col items-center justify-center h-[44px] w-full overflow-hidden">
+            <!-- Google Sign-In Container (Strictly locked 280px width & 44px height: prevents horizontal & vertical jumps) -->
+            <div class="flex flex-col items-center justify-center h-[44px] w-full">
                 <div id="g_id_onload"
                      data-client_id="733707845450-vui70uu318k17qvfjicu4tb5q2dsdrdg.apps.googleusercontent.com"
                      data-callback="handleGoogleCredentialResponse"
                      data-auto_prompt="false">
                 </div>
-                <div class="g_id_signin w-full flex justify-center h-[44px]" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with" data-shape="pill" data-logo_alignment="left"></div>
+                <div class="g_id_signin flex justify-center w-[280px] h-[44px]" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with" data-shape="pill" data-logo_alignment="left" data-width="280"></div>
             </div>
 
-            <div class="relative flex py-1 items-center">
+            <div class="relative flex py-1 items-center max-w-[280px] mx-auto w-full">
                 <div class="flex-grow border-t border-slate-200"></div>
-                <span class="flex-shrink mx-4 text-xs font-semibold text-slate-400 uppercase" data-i18n="loginOrDemo">або ознайомлення</span>
+                <span class="flex-shrink mx-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider" data-i18n="loginOrDemo">або ознайомлення</span>
                 <div class="flex-grow border-t border-slate-200"></div>
             </div>
 
-            <div>
-                <button type="button" onclick="startInstantDemoMode()" class="w-full bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-semibold py-3 rounded-2xl transition flex items-center justify-center gap-2 text-xs shadow-sm">
-                    <i class="fa-solid fa-wand-magic-sparkles text-amber-600"></i> <span data-i18n="loginTryDemo">Спробувати демо-режим (Без реєстрації)</span>
+            <div class="w-full flex justify-center">
+                <button type="button" onclick="startInstantDemoMode()" class="w-[280px] bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold py-2.5 px-4 rounded-full transition flex items-center justify-center gap-2 text-xs shadow-sm hover:shadow">
+                    <span class="text-amber-600 text-sm">✨</span> <span data-i18n="loginTryDemo">Демо-режим без реєстрації</span>
                 </button>
             </div>
 
-            <p class="text-[11px] text-slate-400 pt-2" data-i18n="loginNotice">
-                Для нового користувача автоматично створюється особиста база ферми з можливістю імпорту бекапу Uniform-Agri.
+            <p class="text-[11px] text-slate-400 pt-1" data-i18n="loginNotice">
+                Для нового користувача створюється особистий простір з можливістю імпорту Uniform-Agri.
             </p>
 
-            <!-- SEO & Feature Highlights (Crawlable for Googlebot) -->
+            <!-- SEO & Feature Highlights (Multilingual & Crawlable) -->
             <div class="pt-4 border-t border-slate-100 text-left space-y-2.5">
-                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider text-center text-slate-500">
+                <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider text-center" data-i18n="loginFeaturesTitle">
                     Можливості для користувачів Uniform-Agri:
                 </h3>
                 <ul class="text-xs text-slate-600 space-y-2">
                     <li class="flex items-start gap-2">
-                        <i class="fa-solid fa-cloud-arrow-up text-emerald-600 mt-0.5"></i>
-                        <span><b>Прямий імпорт Firebird (.FDB / .ZIP):</b> 100% збереження історії корів, лактацій, отелень та ветеринарних записів.</span>
+                        <i class="fa-solid fa-cloud-arrow-up text-emerald-600 mt-0.5 flex-shrink-0"></i>
+                        <span data-i18n="loginFeatImport"><b>Прямий імпорт Firebird (.FDB / .ZIP):</b> 100% збереження історії корів, лактацій та ветеринарних записів.</span>
                     </li>
                     <li class="flex items-start gap-2">
-                        <i class="fa-solid fa-mobile-screen-button text-emerald-600 mt-0.5"></i>
-                        <span><b>Мобільний доступ у корівнику:</b> швидка перевірка статусів тварин зі смартфона без прив'язки до офісного комп'ютера.</span>
+                        <i class="fa-solid fa-mobile-screen-button text-emerald-600 mt-0.5 flex-shrink-0"></i>
+                        <span data-i18n="loginFeatMobile"><b>Мобільний доступ у корівнику:</b> швидка перевірка статусів тварин зі смартфона онлайн та офлайн.</span>
                     </li>
                     <li class="flex items-start gap-2">
-                        <i class="fa-solid fa-shield-halved text-emerald-600 mt-0.5"></i>
-                        <span><b>Контроль каренції антибіотиків:</b> автоматичний моніторинг термінів бракеражу молока та м'яса.</span>
+                        <i class="fa-solid fa-shield-halved text-emerald-600 mt-0.5 flex-shrink-0"></i>
+                        <span data-i18n="loginFeatMeds"><b>Контроль каренції антибіотиків:</b> автоматичний моніторинг бракеражу молока та м'яса.</span>
                     </li>
                 </ul>
             </div>
@@ -3767,8 +3767,12 @@
                 loginTitle: "Вхід у DairyERP",
                 loginSubtitle: "Безпечний доступ до кабінету ферми за допомогою Google облікового запису",
                 loginOrDemo: "або ознайомлення",
-                loginTryDemo: "Спробувати демо-режим (Без реєстрації)",
-                loginNotice: "Для нового користувача автоматично створюється особиста база ферми з можливістю імпорту бекапу Uniform-Agri.",
+                loginTryDemo: "Демо-режим без реєстрації",
+                loginNotice: "Для нового користувача створюється особистий простір з можливістю імпорту Uniform-Agri.",
+                loginFeaturesTitle: "Можливості для користувачів Uniform-Agri:",
+                loginFeatImport: "Прямий імпорт Firebird (.FDB / .ZIP): 100% збереження історії корів, лактацій та ветеринарних записів.",
+                loginFeatMobile: "Мобільний доступ у корівнику: швидка перевірка статусів тварин зі смартфона онлайн та офлайн.",
+                loginFeatMeds: "Контроль каренції антибіотиків: автоматичний моніторинг бракеражу молока та м'яса.",
                 headerSubtitle: "Управління молочною фермою та облік стада",
                 footerText: "DairyERP Enterprise Platform • Інтеграція та сумісність з базами Uniform-Agri (ВРХ)",
                 footerAboutBtn: "Про систему & Контакти",
@@ -3917,8 +3921,12 @@
                 loginTitle: "Log In to DairyERP",
                 loginSubtitle: "Secure access to your farm dashboard via Google account",
                 loginOrDemo: "or explore",
-                loginTryDemo: "Try Demo Mode (No registration needed)",
-                loginNotice: "For new users, a private empty farm workspace is created automatically with Uniform-Agri backup import support.",
+                loginTryDemo: "Instant Demo (No registration)",
+                loginNotice: "A private workspace is created automatically with Uniform-Agri backup import support.",
+                loginFeaturesTitle: "Key Features for Uniform-Agri Users:",
+                loginFeatImport: "Direct Firebird (.FDB / .ZIP) Import: 100% preservation of cow history, lactations and vet records.",
+                loginFeatMobile: "Mobile Barn Access: quickly check animal statuses on your smartphone online and offline.",
+                loginFeatMeds: "Antibiotic Withholding Alerts: automated milk & meat withdrawal period monitoring.",
                 headerSubtitle: "Dairy Herd Management & Livestock Intelligence",
                 footerText: "DairyERP Enterprise Platform • Integrated with Uniform-Agri Herd Databases",
                 footerAboutBtn: "About System & Contacts",
