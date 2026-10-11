@@ -62,10 +62,6 @@
             </div>
         </a>
         <div id="authHeaderArea" class="flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">
-            <!-- Header Demo Button (hidden on login screen to prevent button blink & visual clutter) -->
-            <button id="headerDemoBtn" onclick="startInstantDemoMode()" class="hidden bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1">
-                <i class="fa-solid fa-wand-magic-sparkles text-amber-600"></i> <span class="text-[11px] sm:text-xs">Демо</span>
-            </button>
             <!-- Guest Login Button in Header -->
             <button id="headerLoginBtn" onclick="openLoginModal()" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 sm:px-3.5 py-1.5 rounded-xl text-xs font-semibold shadow-sm transition flex items-center gap-1.5">
                 <i class="fa-brands fa-google text-xs"></i> <span class="hidden sm:inline">Увійти через Google</span><span class="sm:hidden text-xs">Вхід</span>
@@ -1937,7 +1933,6 @@
 
                 // Header buttons state when unauthenticated:
                 document.getElementById('headerBackupBtn')?.classList.add('hidden');
-                document.getElementById('headerDemoBtn')?.classList.remove('hidden');
 
             } catch (err) {
                 console.warn("System status error, falling back to login screen", err);
@@ -1945,7 +1940,6 @@
                 document.getElementById('loginScreen').classList.remove('hidden');
                 document.getElementById('appDashboard').classList.add('hidden');
                 document.getElementById('headerBackupBtn')?.classList.add('hidden');
-                document.getElementById('headerDemoBtn')?.classList.remove('hidden');
             }
         }
 
@@ -2065,7 +2059,6 @@
             document.getElementById('headerLoginBtn')?.classList.add('hidden');
             document.getElementById('headerUserChip')?.classList.add('hidden');
             document.getElementById('headerBackupBtn')?.classList.add('hidden');
-            document.getElementById('headerDemoBtn')?.classList.remove('hidden');
             document.getElementById('loginScreen').classList.remove('hidden');
         }
 
@@ -2098,7 +2091,6 @@
                 headerLoginBtn?.classList.remove('hidden');
                 headerUserChip?.classList.add('hidden');
                 document.getElementById('headerBackupBtn')?.classList.add('hidden');
-                document.getElementById('headerDemoBtn')?.classList.add('hidden');
             } else {
                 headerLoginBtn?.classList.add('hidden');
                 if (headerUserChip && headerEmailSpan) {
@@ -2108,7 +2100,6 @@
                 }
                 document.getElementById('headerBackupBtn')?.classList.remove('hidden');
                 document.getElementById('headerBackupBtn')?.classList.add('flex');
-                document.getElementById('headerDemoBtn')?.classList.add('hidden');
             }
 
             document.getElementById('userNameDisplay').textContent = currentUser?.full_name || "Користувач";
