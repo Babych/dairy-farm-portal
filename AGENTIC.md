@@ -42,6 +42,16 @@ Welcome, AI coding agent! This repository hosts the public-facing edge portal an
 
 ---
 
+## 🧠 Karpathy Behavioral Guidelines for AI Agents
+
+To avoid LLM hallucinations, code rot, and drift:
+1. **💭 Think & Inspect Before Coding**: Always read the exact files, schema, and existing patterns before making changes. Never assume signatures or fabricate APIs.
+2. **🎯 Simplicity First**: Write the minimum clean code that solves the problem. No speculative abstractions, no premature generic wrappers, no unrequested future-proofing.
+3. **🔬 Surgical Changes**: Touch only what was asked. Zero drive-by reformatting, zero removal of unrelated working code, and preserve all surrounding docstrings/comments.
+4. **🏁 Goal-Driven Verification**: Never consider a task done without reproducing or executing the test command (`npm test`) and verifying a clean zero-exit status.
+
+---
+
 ## 🔒 Sacred Rules for AI Agents (Vibe-Coding Guardrails)
 
 ### 1. 🚫 Zero Stubs, Fake Data, or Deceptive UI
