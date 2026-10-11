@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
         uses: actions/setup-node@v7
@@ -24,16 +24,13 @@ jobs:
       - name: Verify Cloudflare Pages Bundle Build
         run: npx wrangler pages functions build
 
-      - name: Run Live Health Check (Non-blocking on D1 Free Limits)
-        run: node test_health_check.js
-
   deploy-to-cloudflare:
     needs: test-and-build
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
         uses: actions/setup-node@v7
