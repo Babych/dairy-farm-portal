@@ -1,103 +1,59 @@
-# 🤖 DairyERP Portal Architecture & AI Agentic Coding Standard (AGENTIC.md)
+# 🤖 DairyERP Portal Architecture & Agent Standards (AGENTIC.md)
 
-Welcome, AI coding agent! This repository hosts the public-facing edge portal and Progressive Web App (PWA) for the Dairy Herd ERP system.
-
----
-
-## 🏛️ Ecosystem Topology
-
-1. **`dairy-farm-portal` (This Repository - Cloudflare Edge & PWA):**
-   - **Runtime:** Cloudflare Pages + Cloudflare Pages Functions (V8 Edge Workers) + Cloudflare D1 SQL.
-   - **Frontend:** Single-Page Vanilla ES6+ Web App (`portal.html` & `index.html`), Tailwind CSS, WebCrypto API.
-   - **PWA Engine:** Service Worker (`sw.js`) with build-time cache busting (`scripts/stamp-sw.js`) and transparent offline sync outbox.
-
-2. **`dairy-farm` (Private Backend & Microservice):**
-   - **Runtime:** Python 3.11 / FastAPI container running on Google Cloud Run (`europe-west3`, Frankfurt).
-   - **Role:** High-performance binary parser for legacy Uniform-Agri Firebird (`.FDB`) databases.
+This repository hosts the public Edge portal and Progressive Web App (PWA) for Dairy Herd ERP.
 
 ---
 
-## 📁 Repository Structure & Collocation
+## 🏛️ Architecture & Stack
 
-```
-├── functions/
-│   └── api/
-│       └── [[route]].js       # ⚡ Cloudflare Pages Functions (D1 queries, auth, zootech calculations)
-├── test/
-│   ├── zootech.test.js        # 🧪 Pure zootechnical domain unit tests (DIM, ECI, gestation, quarantine)
-│   └── security.test.js       # 🔐 WebCrypto JWT signing & PBKDF2 salt hashing tests
-├── scripts/
-│   └── stamp-sw.js            # 🏷️ Automatic build-time version stamp for sw.js (git hash + timestamp)
-├── icons/
-│   ├── icon-192.png           # 📱 PWA home screen icon (192x192)
-│   └── icon-512.png           # 📱 PWA splash icon (512x512)
-├── manifest.json              # 📄 Web App Manifest for mobile installation
-├── sw.js                      # ⚙️ Service Worker (Cache-First shell, Stale-While-Revalidate API)
-├── portal.html                # 🖥️ Main authenticated application SPA
-├── index.html                 # 🌐 Public entrance & mirrored application SPA
-├── schema_d1.sql              # 🗄️ Cloudflare D1 SQLite database schema
-├── package.json               # 📦 Scripts (test, build:sw, build, deploy)
-└── AGENTIC.md                 # 🤖 This file
-```
+- **Platform:** Cloudflare Pages + Pages Functions (V8 Edge Workers) + Cloudflare D1 (SQLite).
+- **Frontend:** Single-Page Vanilla ES6+ Web App (`portal.html` & `index.html`), Tailwind CSS, native WebCrypto API.
+- **PWA:** Service Worker (`sw.js`) with build-time cache busting (`scripts/stamp-sw.js`) and offline barn outbox.
+- **Backend Service:** Stateless Firebird parser on Google Cloud Run (`POST /api/convert/uniform`).
 
 ---
 
-## 🧠 Karpathy Behavioral Guidelines for AI Agents
+## 🧠 Karpathy Behavioral Guidelines
 
-To avoid LLM hallucinations, code rot, and drift:
-1. **💭 Think & Inspect Before Coding**: Always read the exact files, schema, and existing patterns before making changes. Never assume signatures or fabricate APIs.
-2. **🎯 Simplicity First**: Write the minimum clean code that solves the problem. No speculative abstractions, no premature generic wrappers, no unrequested future-proofing.
-3. **🔬 Surgical Changes**: Touch only what was asked. Zero drive-by reformatting, zero removal of unrelated working code, and preserve all surrounding docstrings/comments.
-4. **🏁 Goal-Driven Verification**: Never consider a task done without reproducing or executing the test command (`npm test`) and verifying a clean zero-exit status.
+1. **💭 Think & Inspect First**: Always inspect target files, schemas, and existing patterns before editing. Never assume signatures.
+2. **🎯 Simplicity First**: Minimum code that solves the problem. No speculative abstractions, generic wrappers, or unrequested features.
+3. **🔬 Surgical Changes**: Touch only what was asked. Zero drive-by reformatting, preserve working code and docstrings.
+4. **🏁 Goal-Driven Verification**: Verify every change with `npm test` and `npm run build` before declaring completion.
 
 ---
 
-## 🔒 Sacred Rules for AI Agents (Vibe-Coding Guardrails)
+## 🔒 Engineering Invariants
 
-### 1. 🚫 Zero Stubs, Fake Data, or Deceptive UI
-- **Real operations only**: Never insert dummy promotional teasers, simulated push notifications, or mocked data endpoints in production branches.
-- **Auditable offline state**: When operating in the barn without internet, the UI must explicitly reflect offline storage status (`🟡 Офлайн-режим`, `💾 Збережено локально`) and notify the user transparently upon network recovery.
+### 1. 📉 D1 Consumption Guardrails (Rows Read Quota)
+Cloudflare D1 free-tier allows 5M rows read/day. Unindexed full scans can exhaust this quota in minutes:
+- **Mandatory Indexes**: Every new column in `WHERE`, `ORDER BY`, or `JOIN` must have an index in `schema_d1.sql` prefixed with `farm_id` (e.g. `CREATE INDEX IF NOT EXISTS idx_animals_farm_status ON animals(farm_id, current_status);`).
+- **Strict Pagination**: Never issue unpaged `SELECT *` without explicit `LIMIT` / `OFFSET`.
+- **Client Cache**: Rely on Service Worker `Stale-While-Revalidate` for read-only catalog queries.
 
-### 2. 🧬 Zootechnical Integrity
-Any edits to livestock formulas in `functions/api/[[route]].js` or `test/zootech.test.js` must strictly obey standard veterinary biology:
-- **Gestation Period**: Standard 280 days (Expected Calving Date = Insemination Date + 280).
-- **Dry-Off Period**: Standard 60 days before expected calving (Gestation day 220+).
-- **Days in Milk (DIM)**: Calculated strictly from `last_calving_date` up to today.
-- **Quarantine Priority**: Active antibiotic milk withholding strictly overrides any reproductive status.
+### 2. 🔐 Native WebCrypto Only on Edge
+Pages Functions run in a V8 isolate without Node.js native modules:
+- Use only native `crypto.subtle` for PBKDF2 salt hashing and HMAC-SHA256 JWT tokens.
+- Never add `bcrypt` or `jsonwebtoken` packages to Pages Functions.
 
-### 3. 🔐 Hermetic Security & WebCrypto
-- Use native Edge `crypto.subtle` for PBKDF2 key derivation and HMAC-SHA256 JWT tokens.
-- Never hardcode secrets. Always read from `context.env.JWT_SECRET` and `context.env.PARSER_SECRET_TOKEN`.
+### 3. 📦 32 MB Cloud Run Ingestion Ceiling
+Google Cloud Run enforces a 32 MB request body limit:
+- Raw Firebird `.FDB` files are compressed client-side via `fflate` into `.ZIP` before upload. Never bypass this compression.
 
-### 4. 🔄 Cache Busting & Service Worker Lifecycle
-- Never manually hardcode version strings in `sw.js`.
-- Always run `npm run build` which triggers `node scripts/stamp-sw.js` to stamp `CACHE_VERSION = 'dairy-erp-v<git-sha>-<timestamp>'`.
+### 4. 💾 Offline Mutations Protocol
+For cattle barn operations without internet:
+- All state modifications (treatments, inseminations) must route through `sendOrQueueMutation(url, method, payload)` to ensure persistence in the offline outbox until network recovery.
+- Keep network and outbox states visible to the user (`#headerNetworkStatus`).
 
-### 5. 📉 Consumption Plan & Index Guardrails (Cloudflare D1 / Rows Read Quota)
-Cloudflare D1 charges by **Rows Read** (free tier: 5M rows/day). A single unindexed full-table scan can exhaust the entire daily quota in minutes:
-- **Mandatory Indexing for New Filters & Sorts**: Whenever adding a new filter (`WHERE column = ?`) or sorting (`ORDER BY column`), you **MUST** create a corresponding index in `schema_d1.sql` (e.g. `CREATE INDEX IF NOT EXISTS idx_animals_farm_status ON animals(farm_id, current_status);`).
-- **Composite Farm Scoping**: All queries are multi-tenant; always prefix indexes with `farm_id` so rows are scoped immediately.
-- **Enforce Strict `LIMIT`**: Never execute unpaged `SELECT *` queries. Always supply sensible defaults (`LIMIT 50 OFFSET ?`).
-- **Leverage Client SW Cache**: Never bypass the Service Worker's `Stale-While-Revalidate` cache for read-only catalog endpoints (`/api/animals`, `/api/dashboard/stats`).
-
-### 6. 🏛️ Architectural Invariants & Historical Gotchas
-- **🟡 Graceful Degradation over Hard Failures**: External D1 quota exhaustions (`500`) must be caught gracefully and marked with yellow non-blocking warnings in integration tests. Never fail the entire CI pipeline due to upstream cloud provider rate-limits.
-- **⚡ Native WebCrypto Only on Edge**: Cloudflare Pages Functions run in a V8 isolate. Never attempt `npm install bcrypt` or `jsonwebtoken`; all auth and hashing is done strictly via native `crypto.subtle` (PBKDF2 with salt + HMAC-SHA256).
-- **📦 32 MB Cloud Run Body Limit**: Google Cloud Run rejects payloads > 32 MB. Never bypass client-side gzip/deflate compression (`fflate` in `portal.html`) before uploading Firebird `.FDB` files to `/api/convert/uniform`.
-- **📱 Two-Tier `flex-wrap` UX (No Horizontal Scrollbars)**: Navigating cattle barns on mobile devices requires high visibility. Header tabs must wrap into two distinct floors (`flex-wrap`) rather than hiding behind a single horizontal scroll line (`overflow-x-auto`).
-- **💾 All Mutations Must Use `sendOrQueueMutation`**: Never call raw `fetch()` directly for animal health or repro forms. Always route through `sendOrQueueMutation(url, method, payload)` so data is safely written to the offline outbox if the farm Wi-Fi drops.
-- **🚫 Hermetic GitHub Actions Deployment**: Deployment is orchestrated exclusively by `.github/workflows/ci.yml` via `wrangler pages deploy`. Never re-enable or attempt to fix direct Cloudflare Git build hooks (`dairy-farm-db deployments`).
+### 5. 🧬 Zootechnical Biology Invariants
+- **Gestation**: Standard 280 days (`expected_calving_date = insemination_date + 280`).
+- **Dry-off**: Standard 60 days before calving (Gestation day 220+).
+- **Quarantine**: Active antibiotic milk withholding strictly overrides reproductive statuses.
 
 ---
 
 ## 🧪 Verification Protocol
 
-Before pushing changes, run:
 ```bash
-npm test
-npm run build
+npm test        # All 21 zootech & security tests must pass
+npm run build   # Stamps sw.js version and compiles Cloudflare Worker bundle
 ```
-Expected output:
-1. All unit and security tests pass (`pass 21, fail 0`).
-2. `[PWA Build] Updated sw.js CACHE_VERSION...`
-3. `✨ Compiled Worker successfully`.
