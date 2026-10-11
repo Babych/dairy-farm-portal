@@ -8,7 +8,11 @@
     <meta name="keywords" content="uniform agri, юніформ агрі, uniform agri україна, облік корів, програма для молочної ферми, імпорт uniform agri fdb, облік врх, каренція молока, ветеринарний чекліст, dairy erp">
     <meta name="author" content="DairyERP">
     <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://dairy-farm-portal.pages.dev/">
+    <meta name="google-site-verification" content="Bs8EMpzF-ONy9qCsg3TEkJphGqDNZF4YzNcAuptJij4" />
+    <link rel="canonical" id="canonicalTag" href="https://dairy-farm-portal.pages.dev/">
+    <link rel="alternate" hreflang="uk" href="https://dairy-farm-portal.pages.dev/?lang=uk">
+    <link rel="alternate" hreflang="en" href="https://dairy-farm-portal.pages.dev/?lang=en">
+    <link rel="alternate" hreflang="x-default" href="https://dairy-farm-portal.pages.dev/">
 
     <!-- Open Graph / Facebook / Telegram -->
     <meta property="og:type" content="website">
@@ -85,10 +89,10 @@
             <button id="headerBackupBtn" onclick="downloadBackup()" title="Завантажити резервну копію бази даних" class="hidden bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition items-center gap-1.5 border border-slate-200">
                 <i class="fa-solid fa-download text-emerald-600"></i> <span class="hidden sm:inline">Бекап</span>
             </button>
-            <!-- Language Switcher (UA / EN) -->
+            <!-- Language Switcher (UA / EN) with search-engine crawlable URLs -->
             <div class="flex items-center bg-slate-100 border border-slate-200 rounded-xl p-0.5 text-xs font-bold">
-                <button onclick="setLanguage('uk')" id="langUkBtn" class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white transition shadow-sm">UA</button>
-                <button onclick="setLanguage('en')" id="langEnBtn" class="px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition">EN</button>
+                <a href="/?lang=uk" onclick="setLanguage('uk'); return false;" id="langUkBtn" class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white transition shadow-sm">UA</a>
+                <a href="/?lang=en" onclick="setLanguage('en'); return false;" id="langEnBtn" class="px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition">EN</a>
             </div>
         </div>
     </header>
@@ -149,14 +153,14 @@
                 <p class="text-xs text-slate-500 max-w-xs mx-auto" data-i18n="loginSubtitle">Безпечний доступ до кабінету ферми за допомогою Google облікового запису</p>
             </div>
 
-            <!-- Google Sign-In Container -->
-            <div class="flex flex-col items-center justify-center py-2 space-y-3">
+            <!-- Google Sign-In Container (min-h reserves height to eliminate ~0.5s layout shift on mobile) -->
+            <div class="flex flex-col items-center justify-center py-2 space-y-3 min-h-[48px]">
                 <div id="g_id_onload"
                      data-client_id="733707845450-vui70uu318k17qvfjicu4tb5q2dsdrdg.apps.googleusercontent.com"
                      data-callback="handleGoogleCredentialResponse"
                      data-auto_prompt="false">
                 </div>
-                <div class="g_id_signin w-full flex justify-center" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with" data-shape="pill" data-logo_alignment="left"></div>
+                <div class="g_id_signin w-full flex justify-center min-h-[44px]" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with" data-shape="pill" data-logo_alignment="left"></div>
             </div>
 
             <div class="relative flex py-1 items-center">
@@ -3918,6 +3922,12 @@
 
         function setLanguage(lang) {
             localStorage.setItem("dairy_lang", lang);
+            document.documentElement.lang = lang;
+            const canonicalTag = document.getElementById('canonicalTag');
+            if (canonicalTag) {
+                canonicalTag.href = lang === 'en' ? 'https://dairy-farm-portal.pages.dev/?lang=en' : 'https://dairy-farm-portal.pages.dev/';
+            }
+
             document.getElementById('langUkBtn').className = lang === 'uk' ? 'px-2.5 py-1 rounded-lg bg-emerald-600 text-white transition shadow-sm' : 'px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition';
             document.getElementById('langEnBtn').className = lang === 'en' ? 'px-2.5 py-1 rounded-lg bg-emerald-600 text-white transition shadow-sm' : 'px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition';
             
