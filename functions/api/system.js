@@ -159,13 +159,13 @@ export async function handleSystem({ path, method, request, url, env, db, jsonRe
             return jsonResponse({ detail: "Файл не передано" }, 400);
         }
 
-        // Send to Cloud Run parser microservice (configured via Cloudflare Secrets)
-        const parserUrl = env.PARSER_SERVICE_URL;
-        const parserSecret = env.PARSER_SECRET_TOKEN;
+        // Send to Cloud Run parser microservice (configured via Cloudflare Secrets or defaults)
+        const parserUrl = env?.PARSER_SERVICE_URL || "https://dairy-farm-parser-wg7iw37zsq-ey.a.run.app/api/convert/uniform";
+        const parserSecret = env?.PARSER_SECRET_TOKEN || "dairy_parser_cloud_run_secret_2026";
 
-        if (!parserUrl || !parserSecret) {
+        if (!parserUrl) {
             return jsonResponse({
-                detail: "Служба конвертації баз не налаштована на сервері (відсутній PARSER_SERVICE_URL або PARSER_SECRET_TOKEN в секретах Cloudflare)."
+                detail: "Служба конвертації баз не налаштована на сервері (відсутній PARSER_SERVICE_URL)."
             }, 503);
         }
 

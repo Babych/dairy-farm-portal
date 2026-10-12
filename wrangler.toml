@@ -7,3 +7,7 @@ binding = "DB"
 database_name = "dairy-farm-db"
 database_id = "23d5107d-f30f-4a84-9dd7-d4516c9f5f60"
 
+[vars]
+PARSER_SERVICE_URL = "https://dairy-farm-parser-wg7iw37zsq-ey.a.run.app/api/convert/uniform"
+PARSER_SECRET_TOKEN = "dairy_parser_cloud_run_secret_2026"
+
