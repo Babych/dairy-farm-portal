@@ -1,73 +1,15 @@
 // Feature Module: Dashboard Analytics, Event Grid & Veterinary Action Lists
 // Flat 1-level collocation for AI vibe-coding
 import { MedicationRepository } from './repositories/medicationRepo.js';
+import { DashboardRepository } from './repositories/dashboardRepo.js';
 
 export async function handleDashboard({ path, method, request, url, db, jsonResponse, getActiveFarmId }) {
     // 1. GET /api/dashboard/stats
     if (path === "/api/dashboard/stats") {
         const farmId = getActiveFarmId();
-        let fFilter = farmId ? "WHERE farm_id = ?" : "";
-        let fParams = farmId ? [farmId] : [];
-
-        // Single-Pass Aggregation Query
-        const aggQuery = `
-            SELECT 
-                count(*) as total,
-                SUM(CASE WHEN current_status IN ('Active', 'Fresh') THEN 1 ELSE 0 END) as lactating,
-                SUM(CASE WHEN current_status = 'Dry' THEN 1 ELSE 0 END) as dry,
-                SUM(CASE WHEN current_status = 'Pregnant' THEN 1 ELSE 0 END) as pregnant,
-                SUM(CASE WHEN current_status = 'Fresh' THEN 1 ELSE 0 END) as fresh,
-                SUM(CASE WHEN current_status = 'Inseminated' THEN 1 ELSE 0 END) as inseminated,
-                SUM(CASE WHEN current_status = 'Active' AND (last_insemination_date IS NULL OR current_status NOT IN ('Pregnant', 'Inseminated')) THEN 1 ELSE 0 END) as open
-            FROM animals ${fFilter}
-        `;
-        const agg = (await db.prepare(aggQuery).bind(...fParams).first()) || {};
-
-        const total = agg.total || 0;
-        const lactating = agg.lactating || 0;
-        const dry = agg.dry || 0;
-        const pregnant = agg.pregnant || 0;
-        const fresh = agg.fresh || 0;
-        const inseminated = agg.inseminated || 0;
-        const open = agg.open || 0;
-
-        let qQuery = `
-            SELECT count(DISTINCT animal_id) as c 
-            FROM health_events 
-            WHERE (is_active_withholding = 1 OR milk_withholding_until >= date('now'))
-        `;
-        let qParams = [];
-        if (farmId) {
-            qQuery = `
-                SELECT count(DISTINCT h.animal_id) as c 
-                FROM health_events h 
-                JOIN animals a ON h.animal_id = a.id 
-                WHERE a.farm_id = ? AND (h.is_active_withholding = 1 OR h.milk_withholding_until >= date('now'))
-            `;
-            qParams = [farmId];
-        }
-        const inQuarantine = (await db.prepare(qQuery).bind(...qParams).first())?.c || 0;
-
-        return jsonResponse({
-            total_cows: total,
-            milking_cows: lactating,
-            dry_cows: dry,
-            in_quarantine: inQuarantine,
-            herd_tiles: {
-                open: open,
-                inseminated: inseminated,
-                pregnant: pregnant,
-                dry: dry,
-                fresh: fresh
-            },
-            kpis: {
-                avg_dim: total > 0 ? 168 : 0,
-                conception_rate: total > 0 ? 38.5 : 0,
-                pregnancy_rate: total > 0 ? 21.5 : 0,
-                insemination_rate: total > 0 ? 58.5 : 0,
-                calving_interval_days: total > 0 ? 412 : 0
-            }
-        });
+        const dashboardRepo = new DashboardRepository(db);
+        const stats = await dashboardRepo.getHerdStats(farmId);
+        return jsonResponse(stats);
     }
 
     // 2. GET /api/dashboard/event-grid
