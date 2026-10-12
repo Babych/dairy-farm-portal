@@ -72,40 +72,9 @@ export async function handleDashboard({ path, method, request, url, db, jsonResp
     // 3. GET /api/dashboard/action-lists
     if (path === "/api/dashboard/action-lists") {
         const farmId = getActiveFarmId();
-        let farmJoin = farmId ? "AND a.farm_id = ?" : "";
-        let fParams = farmId ? [farmId] : [];
-
-        const quarantine = (await db.prepare(`
-            SELECT h.id, a.id as animal_id, a.farm_number, a.official_tag, h.diagnosis, 
-                   h.medication_name as medication, h.milk_withholding_until as withholding_until,
-                   MAX(1, CAST((julianday(h.milk_withholding_until) - julianday('now')) AS INTEGER)) as days_left
-            FROM health_events h
-            JOIN animals a ON h.animal_id = a.id
-            WHERE (h.is_active_withholding = 1 OR h.milk_withholding_until >= date('now'))
-            ${farmJoin}
-            ORDER BY h.milk_withholding_until ASC
-            LIMIT 20
-        `).bind(...fParams).all()).results;
-
-        const dryQuery = farmId 
-            ? "SELECT id as animal_id, farm_number, official_tag, lactation_number as lactation, expected_calving_date as expected_calving, CAST((julianday(expected_calving_date) - julianday('now')) AS INTEGER) as days_to_calving FROM animals WHERE farm_id = ? AND current_status = 'Pregnant' AND (days_pregnant >= 220 OR (expected_calving_date >= date('now') AND expected_calving_date <= date('now', '+60 days'))) ORDER BY expected_calving_date ASC LIMIT 20"
-            : "SELECT id as animal_id, farm_number, official_tag, lactation_number as lactation, expected_calving_date as expected_calving, CAST((julianday(expected_calving_date) - julianday('now')) AS INTEGER) as days_to_calving FROM animals WHERE current_status = 'Pregnant' AND (days_pregnant >= 220 OR (expected_calving_date >= date('now') AND expected_calving_date <= date('now', '+60 days'))) ORDER BY expected_calving_date ASC LIMIT 20";
-        const dryCandidates = (await db.prepare(dryQuery).bind(...fParams).all()).results;
-
-        const calvingQuery = farmId
-            ? "SELECT id as animal_id, farm_number, official_tag, expected_calving_date as expected_calving, CAST((julianday(expected_calving_date) - julianday('now')) AS INTEGER) as days_left FROM animals WHERE farm_id = ? AND expected_calving_date >= date('now') AND expected_calving_date <= date('now', '+30 days') ORDER BY expected_calving_date ASC LIMIT 20"
-            : "SELECT id as animal_id, farm_number, official_tag, expected_calving_date as expected_calving, CAST((julianday(expected_calving_date) - julianday('now')) AS INTEGER) as days_left FROM animals WHERE expected_calving_date >= date('now') AND expected_calving_date <= date('now', '+30 days') ORDER BY expected_calving_date ASC LIMIT 20";
-        const calvingWatch = (await db.prepare(calvingQuery).bind(...fParams).all()).results;
-
-        return jsonResponse({
-            quarantine_milk: quarantine,
-            milk_quarantine: quarantine,
-            pregnancy_check: [],
-            pregnancy_check_due: [],
-            dry_off_candidates: dryCandidates,
-            calving_watch: calvingWatch,
-            expected_calving: calvingWatch
-        });
+        const dashboardRepo = new DashboardRepository(db);
+        const actionLists = await dashboardRepo.getActionLists(farmId);
+        return jsonResponse(actionLists);
     }
 
     // 4. GET /api/medications

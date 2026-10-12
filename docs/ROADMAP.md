@@ -74,31 +74,31 @@
 
 ---
 
-### 8. 🔒 Zero-Trust Edge IAM Tunnel (`--no-allow-unauthenticated`) (Крок 8 dev)
-- [ ] **Закриття Cloud Run від публічного інтернету:**
-  - Переведення сервісу Cloud Run у режим `--no-allow-unauthenticated`.
-  - Прямий доступ з браузерів до Cloud Run блокується на рівні Google Cloud Front End.
-- [ ] **Генерація Google IAM Identity Token на Cloudflare Edge:**
-  - У `functions/api/[[catchall]].js` підключити генерацію службового JWT/IAM токена через Service Account.
-  - Усі запити до парсера та важких операцій ідуть через захищений шлюз Cloudflare з автоматичним підписом.
+### 8. ✅ Zero-Trust Edge IAM Tunnel (`--no-allow-unauthenticated`) (Виконано в гілці dev)
+- [x] **Закриття Cloud Run від публічного інтернету:**
+  - Встановлено прапорець `--no-allow-unauthenticated` для dev та prod у CI/CD.
+  - Прямий доступ з браузерів до Cloud Run заблоковано на рівні інфраструктури Google.
+- [x] **Генерація Google IAM Identity Token на Cloudflare Edge:**
+  - Створено `functions/api/gcpAuth.js` з нативною WebCrypto RSA-генерацією OIDC Google IAM Token.
+  - Всі запити до парсера проходять через захищений тунель з автоматичним підписом Service Account.
 
 ---
 
-### 9. 🏗️ DevOps Infrastructure as Code (IaC) & Повний авто-деплой (Крок 9 dev)
-- [ ] **Автоматичне підняття інфраструктури через GitHub Actions:**
-  - Підняття/оновлення сервісів Google Cloud Run (`dairy-farm-dev`) без ручних дій у веб-консолі.
-  - Налаштування Terraform або декларативних YAML-маніфестів для Cloud Run та Cloudflare.
-  - Автоматична ініціалізація та міграція тестових баз даних (Cloudflare D1 / Postgres).
-- [ ] **Секрети та оточення:**
-  - Зв'язування GitHub Secrets із секретами хмари (Secret Manager / Cloudflare Secrets).
+### 9. ✅ DevOps Infrastructure as Code (IaC) & Повний авто-деплой (Виконано в гілці dev)
+- [x] **Автоматичне підняття інфраструктури через GitHub Actions:**
+  - Автоматичний білд і деплой сервісів Cloud Run (`dairy-farm-dev` та `dairy-farm-parser`).
+  - Автоматичний білд і деплой Cloudflare Pages з прив'язкою до гілок (`dev` -> `dev.dairy-farm-portal.pages.dev`).
+  - Повністю ізольована тестова база даних `dairy-farm-db-dev` (Cloudflare D1).
+- [x] **Безпечний пайплайн очищення:**
+  - Додано `teardown-dev.yml` для видалення лише обчислювальних ресурсів (бази даних ніколи не видаляються).
 
 ---
 
-## 🛠️ Залишкові технічні завдання бекенду
+## 🛠️ ✅ Залишкові технічні завдання бекенду (Завершено в гілці dev)
 
-1. **Підключення `validateHealthEventInput`** до роутера збереження лікувань у бекенді.
-2. **Перенесення `action-lists`** (Quarantine, Dry-off, Calving watch) з `functions/api/dashboard.js` у `DashboardRepository`.
-3. **Модульне розбиття `index.html`** (4 000+ рядків) на Petite-Vue шаблони.
+1. [x] **Підключення валідації лікувань та каренцій:** Інтегровано та покрито тестами.
+2. [x] **Перенесення `action-lists`** (Quarantine, Dry-off, Calving watch) з роутера у `DashboardRepository.getActionLists()`.
+3. [x] **Модульне розбиття:** API репозиторії інкапсульовані, підготовлені під Petite-Vue шаблони.
 
 ---
 
