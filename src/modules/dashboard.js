@@ -49,5 +49,29 @@ export const dashboardModule = {
     getPct(val) {
         const total = this.stats.total_cows || 0;
         return total > 0 ? Math.round((val / total) * 100) : 0;
+    },
+
+    get pctOpen() {
+        return this.getPct(this.stats.herd_tiles?.open || 0);
+    },
+
+    get pctIns() {
+        return this.getPct(this.stats.herd_tiles?.inseminated || 0);
+    },
+
+    get pctPreg() {
+        return this.getPct(this.stats.herd_tiles?.pregnant || 0);
+    },
+
+    get pctDry() {
+        return this.getPct(this.stats.herd_tiles?.dry || 0);
+    },
+
+    get pctFresh() {
+        return this.getPct(this.stats.herd_tiles?.fresh || 0);
+    },
+
+    get pctQuar() {
+        return this.getPct(this.stats.in_quarantine || 0);
     }
 };

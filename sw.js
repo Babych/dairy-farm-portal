@@ -1,5 +1,5 @@
 // DairyERP Service Worker (PWA Offline & Instant Cache)
-const CACHE_VERSION = 'dairy-erp-vb8c2215-mv5950jr';
+const CACHE_VERSION = 'dairy-erp-vfc14e99-mv59sk6j';
 
 const PRECACHE_ASSETS = [
   '/',
@@ -7,6 +7,16 @@ const PRECACHE_ASSETS = [
   '/manifest.json',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
+  '/lib/petite-vue.es.js',
+  '/src/main.js',
+  '/src/state/store.js',
+  '/src/api/client.js',
+  '/src/modules/farms.js',
+  '/src/modules/herd.js',
+  '/src/modules/dashboard.js',
+  '/src/locales/i18n.js',
+  '/src/locales/uk.js',
+  '/src/locales/en.js',
   'https://cdn.tailwindcss.com',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css',
   'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',

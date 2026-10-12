@@ -61,14 +61,35 @@ export function initApp() {
             this.switchTab('animals');
             if (herdModule.statusFilter === statusKey) {
                 herdModule.setStatusFilter('ALL');
+                store.activeSubFilter = 'ALL';
             } else {
                 herdModule.setStatusFilter(statusKey);
+                store.activeSubFilter = statusKey;
+            }
+            const filterEl = document.getElementById('statusFilter');
+            if (filterEl) filterEl.value = herdModule.statusFilter;
+            if (typeof updateTileHighlight === 'function') {
+                updateTileHighlight(herdModule.statusFilter);
             }
         },
 
-        mounted() {
+        async mounted() {
             applyLanguage(getCurrentLang());
             flushOfflineOutbox();
+
+            // Auto-load data if session exists
+            if (store.token) {
+                try {
+                    await farmsModule.loadFarms();
+                    await Promise.allSettled([
+                        dashboardModule.loadStats(),
+                        herdModule.loadAnimals(),
+                        dashboardModule.loadActionLists()
+                    ]);
+                } catch (e) {
+                    console.warn("[Petite-Vue] Initial load error:", e);
+                }
+            }
         }
     }).mount('#petiteAppRoot');
 }
