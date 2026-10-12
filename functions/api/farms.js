@@ -99,6 +99,11 @@ export async function handleFarms({ path, method, request, url, env, db, jsonRes
             return jsonResponse({ detail: "Назва ферми не може бути порожньою" }, 400);
         }
 
+        const targetFarm = await FarmRepository.getById(db, farmId);
+        if (!targetFarm) {
+            return jsonResponse({ detail: "Ферму не знайдено для оновлення" }, 404);
+        }
+
         const updated = await FarmRepository.updatePassport(db, farmId, {
             name: farmName,
             farmerName,
@@ -106,6 +111,12 @@ export async function handleFarms({ path, method, request, url, env, db, jsonRes
             address,
             phone
         });
+
+        // Audit log
+        await db.prepare(`
+            INSERT INTO audit_logs (id, entity_type, entity_id, action, summary, created_at)
+            VALUES (?, 'FARM', ?, 'UPDATE', ?, datetime('now'))
+        `).bind(crypto.randomUUID(), farmId, `Оновлено назву ферми на '${farmName}'`).run();
 
         return jsonResponse({
             status: "success",
