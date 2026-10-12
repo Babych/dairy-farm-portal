@@ -54,6 +54,7 @@ For cattle barn operations without internet:
 ## 🧪 Verification Protocol
 
 ```bash
-npm test        # All 21 zootech & security tests must pass
-npm run build   # Stamps sw.js version and compiles Cloudflare Worker bundle
+npm run typecheck # Static TypeScript type integrity (validates module schemas, method calls, properties)
+npm test          # All 49 zootech, domain models & security tests must pass
+npm run build     # Runs typecheck, stamps sw.js version and compiles Cloudflare Worker bundle
 ```

@@ -66,7 +66,7 @@ export function initApp() {
                 herdModule.setStatusFilter(statusKey);
                 store.activeSubFilter = statusKey;
             }
-            const filterEl = document.getElementById('statusFilter');
+            const filterEl = /** @type {HTMLSelectElement | null} */ (document.getElementById('statusFilter'));
             if (filterEl) filterEl.value = herdModule.statusFilter;
             if (typeof updateTileHighlight === 'function') {
                 updateTileHighlight(herdModule.statusFilter);

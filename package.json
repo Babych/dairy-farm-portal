@@ -6,11 +6,21 @@
   "scripts": {
     "test": "node --test test/*.test.js",
     "test:integration": "node test/test_health_check.js",
+    "typecheck": "tsc -p jsconfig.json",
     "build:sw": "node scripts/stamp-sw.js",
-    "build": "npm run build:sw && npx wrangler pages functions build",
+    "build": "npm run typecheck && npm run build:sw && npx wrangler pages functions build",
     "deploy": "npm run build:sw && npx wrangler pages deploy . --project-name=dairy-farm-portal"
   },
-  "keywords": ["dairy", "cattle", "uniform-agri", "cloudflare-pages", "cloudflare-d1"],
+  "keywords": [
+    "dairy",
+    "cattle",
+    "uniform-agri",
+    "cloudflare-pages",
+    "cloudflare-d1"
+  ],
   "author": "Dmytro Babych <memory1024@gmail.com>",
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  }
 }

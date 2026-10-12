@@ -44,7 +44,7 @@ export function formatErrorMessage(err) {
 export function applyLanguage(lang) {
     localStorage.setItem("dairy_lang", lang);
     document.documentElement.lang = lang;
-    const canonicalTag = document.getElementById('canonicalTag');
+    const canonicalTag = /** @type {HTMLLinkElement | null} */ (document.getElementById('canonicalTag'));
     if (canonicalTag) {
         canonicalTag.href = lang === 'en' ? 'https://dairy-farm-portal.pages.dev/?lang=en' : 'https://dairy-farm-portal.pages.dev/';
     }
