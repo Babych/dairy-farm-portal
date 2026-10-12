@@ -70,6 +70,8 @@ declare global {
         getOutboxItems: any;
         deleteOutboxItem: any;
         flushOfflineOutbox: any;
+        getCachedAnimal: any;
+        cacheFarmAnimals: any;
         setLanguage: any;
         t: any;
         openCow360?: (id: string) => void;

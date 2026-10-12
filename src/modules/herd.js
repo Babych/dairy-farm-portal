@@ -1,6 +1,5 @@
-// Herd & Animals Management Module
 import { store } from '../state/store.js';
-import { apiRequest } from '../api/client.js';
+import { apiRequest, cacheFarmAnimals } from '../api/client.js';
 
 export const herdModule = {
     animals: [],
@@ -26,6 +25,10 @@ export const herdModule = {
             if (data) {
                 this.animals = data.items || [];
                 this.totalCount = data.total || 0;
+                // Automatically cache animals in IndexedDB for 100% offline access
+                if (this.animals.length > 0) {
+                    cacheFarmAnimals(this.animals);
+                }
             }
         } catch (err) {
             console.error("Load animals error", err);

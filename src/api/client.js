@@ -37,23 +37,67 @@ export async function apiRequest(endpoint, options = {}) {
     }
 }
 
-// IndexedDB Offline Outbox Queue
+// IndexedDB Offline Outbox Queue & Animals Database Cache
 const DB_NAME = "DairyErpOfflineDB";
 const STORE_NAME = "mutations_outbox";
+const CACHE_STORE = "animals_cache";
 
 function openOutboxDB() {
     return new Promise((resolve, reject) => {
-        const req = indexedDB.open(DB_NAME, 1);
+        const req = indexedDB.open(DB_NAME, 2);
         req.onupgradeneeded = (e) => {
             const db = /** @type {IDBOpenDBRequest} */ (e.target).result;
             if (!db.objectStoreNames.contains(STORE_NAME)) {
                 db.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
+            }
+            if (!db.objectStoreNames.contains(CACHE_STORE)) {
+                db.createObjectStore(CACHE_STORE, { keyPath: "id" });
             }
         };
         req.onsuccess = () => resolve(req.result);
         req.onerror = () => reject(req.error);
     });
 }
+
+/**
+ * Cache full farm animals list in IndexedDB for 100% offline access
+ * @param {Array<any>} animals
+ */
+export async function cacheFarmAnimals(animals) {
+    if (!Array.isArray(animals) || animals.length === 0) return;
+    try {
+        const db = await openOutboxDB();
+        const tx = db.transaction(CACHE_STORE, "readwrite");
+        const storeObj = tx.objectStore(CACHE_STORE);
+        for (const a of animals) {
+            if (a && a.id) {
+                storeObj.put(a);
+            }
+        }
+    } catch (e) {
+        console.warn("Failed to cache farm animals in IndexedDB", e);
+    }
+}
+
+/**
+ * Retrieve cached cow card from IndexedDB when offline
+ * @param {string|number} id
+ */
+export async function getCachedAnimal(id) {
+    try {
+        const db = await openOutboxDB();
+        const tx = db.transaction(CACHE_STORE, "readonly");
+        const storeObj = tx.objectStore(CACHE_STORE);
+        return new Promise((resolve) => {
+            const req = storeObj.get(id);
+            req.onsuccess = () => resolve(req.result || null);
+            req.onerror = () => resolve(null);
+        });
+    } catch (e) {
+        return null;
+    }
+}
+
 
 export async function queueOfflineMutation(endpoint, method, payload) {
     try {

@@ -3281,10 +3281,26 @@
         async function openCow360(id) {
             currentCowId = id;
             try {
-                const res = await fetch(`${API_BASE}/api/animals/${id}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const a = await res.json();
+                let a = null;
+                if (!navigator.onLine && window.getCachedAnimal) {
+                    a = await window.getCachedAnimal(id);
+                }
+                if (!a) {
+                    try {
+                        const res = await fetch(`${API_BASE}/api/animals/${id}`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        if (res.ok) {
+                            a = await res.json();
+                        }
+                    } catch (netErr) {
+                        if (window.getCachedAnimal) {
+                            a = await window.getCachedAnimal(id);
+                        }
+                        if (!a) throw netErr;
+                    }
+                }
+                if (!a) throw new Error("Тварину не знайдено в мережі або кеші");
 
                 document.getElementById('mCowTitle').textContent = `Картка корови № ${a.farm_number} ${a.name ? '«' + a.name + '»' : ''}`;
                 document.getElementById('mCowSubtitle').textContent = `${a.official_tag || 'Без бирки'} • ${a.group_name || 'Група 1'}`;
