@@ -106,3 +106,35 @@ export function validateReproEventInput(data) {
         }
     };
 }
+
+export function validateHealthEventInput(data) {
+    const errors = [];
+    if (!data || typeof data !== 'object') {
+        return { isValid: false, errors: ['Health event must be a JSON object'] };
+    }
+
+    const diagnosis = typeof data.diagnosis === 'string' ? data.diagnosis.trim() : '';
+    if (!diagnosis) {
+        errors.push('Diagnosis is required');
+    }
+
+    if (!data.event_date || isNaN(Date.parse(data.event_date))) {
+        errors.push('event_date is required and must be a valid date (YYYY-MM-DD)');
+    }
+
+    return {
+        isValid: errors.length === 0,
+        errors,
+        sanitized: {
+            diagnosis,
+            event_date: data.event_date,
+            medication_name: typeof data.medication_name === 'string' ? data.medication_name.trim() : null,
+            dosage: typeof data.dosage === 'string' ? data.dosage.trim() : null,
+            milk_withholding_until: data.milk_withholding_until || null,
+            meat_withholding_until: data.meat_withholding_until || null,
+            is_active_withholding: Boolean(data.is_active_withholding) ? 1 : 0,
+            notes: typeof data.notes === 'string' ? data.notes.trim() : null
+        }
+    };
+}
+

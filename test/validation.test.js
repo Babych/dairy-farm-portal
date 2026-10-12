@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { validateFarmInput, validateAnimalInput, validateReproEventInput } from '../functions/api/validation.js';
+import { validateFarmInput, validateAnimalInput, validateReproEventInput, validateHealthEventInput } from '../functions/api/validation.js';
 
 describe('API Input Validation & Schema Integrity Suite', () => {
     describe('1. validateFarmInput', () => {
@@ -88,4 +88,34 @@ describe('API Input Validation & Schema Integrity Suite', () => {
             assert.ok(res.errors[0].includes('event_date is required'));
         });
     });
+
+    describe('4. validateHealthEventInput', () => {
+        it('accepts valid health event with antibiotic quarantine', () => {
+            const input = {
+                diagnosis: 'Гострий мастит',
+                event_date: '2026-05-15',
+                medication_name: 'Кобактан',
+                dosage: '10 мл',
+                milk_withholding_until: '2026-05-20',
+                is_active_withholding: true
+            };
+            const res = validateHealthEventInput(input);
+            assert.strictEqual(res.isValid, true);
+            assert.strictEqual(res.sanitized.diagnosis, 'Гострий мастит');
+            assert.strictEqual(res.sanitized.is_active_withholding, 1);
+        });
+
+        it('rejects missing diagnosis', () => {
+            const res = validateHealthEventInput({ event_date: '2026-05-15' });
+            assert.strictEqual(res.isValid, false);
+            assert.ok(res.errors[0].includes('Diagnosis is required'));
+        });
+
+        it('rejects missing or invalid event_date', () => {
+            const res = validateHealthEventInput({ diagnosis: 'Кульгавість', event_date: 'invalid' });
+            assert.strictEqual(res.isValid, false);
+            assert.ok(res.errors[0].includes('event_date is required'));
+        });
+    });
 });
+
