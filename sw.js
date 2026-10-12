@@ -1,6 +1,6 @@
 // DairyERP Service Worker (PWA Offline & Instant Cache)
-// Auto-incremented build token:
-const CACHE_VERSION = 'dairy-erp-v802ee70-mv586z1l';
+// Bumped cache version to force client update:
+const CACHE_VERSION = 'dairy-erp-v2.5.2-' + Date.now();
 
 const PRECACHE_ASSETS = [
   '/',
@@ -84,14 +84,32 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static Assets & App Shell: Cache-First
+  // Static Assets & App Shell
+  // For HTML documents (navigation): use Network-First so users instantly see new deployments, with Cache Fallback for offline!
+  if (req.mode === 'navigate' || req.headers.get('accept')?.includes('text/html')) {
+    event.respondWith(
+      fetch(req).then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200 && !networkResponse.redirected) {
+          const clone = networkResponse.clone();
+          caches.open(CACHE_VERSION).then((cache) => cache.put(req, clone));
+        }
+        return networkResponse;
+      }).catch(async () => {
+        console.warn('[SW Offline] Network failed, serving cached shell for navigation');
+        const cache = await caches.open(CACHE_VERSION);
+        return (await cache.match(req)) || (await cache.match('/')) || (await cache.match('/index.html'));
+      })
+    );
+    return;
+  }
+
+  // Other Static Assets (CSS, JS, Fonts, Images): Cache-First
   event.respondWith(
     caches.match(req).then((cachedResponse) => {
       if (cachedResponse) {
         return cachedResponse;
       }
       return fetch(req).then((networkResponse) => {
-        // If response is redirected or opaque, do not cache bad redirect headers for HTML
         if (
           networkResponse &&
           networkResponse.status === 200 &&
@@ -103,11 +121,8 @@ self.addEventListener('fetch', (event) => {
         }
         return networkResponse;
       }).catch(async () => {
-        // Offline fallback for HTML navigation on slow/Edge connection
-        if (req.mode === 'navigate' || req.headers.get('accept')?.includes('text/html')) {
-          const cache = await caches.open(CACHE_VERSION);
-          return (await cache.match('/')) || (await cache.match('/index.html'));
-        }
+        const cache = await caches.open(CACHE_VERSION);
+        return await cache.match(req);
       });
     })
   );

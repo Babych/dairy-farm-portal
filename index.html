@@ -4053,11 +4053,13 @@
                 }
             }
 
-            // Register PWA Service Worker
+            // Register PWA Service Worker (with automatic update check)
             if ('serviceWorker' in navigator) {
                 window.addEventListener('load', () => {
                     navigator.serviceWorker.register('/sw.js').then((registration) => {
                         console.log('[PWA] Service Worker registered successfully:', registration.scope);
+                        // Trigger immediate check for new version on server
+                        registration.update();
                     }).catch((error) => {
                         console.warn('[PWA] Service Worker registration failed:', error);
                     });
