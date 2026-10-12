@@ -1,5 +1,6 @@
 // Central Reactive State Store for DairyERP Portal
 import { reactive } from '../../lib/petite-vue.es.js';
+import { formatErrorMessage } from '../locales/i18n.js';
 
 export function getApiBase() {
     const saved = localStorage.getItem("dairy_api_base");
@@ -52,10 +53,7 @@ export const store = reactive({
     },
 
     addToast(msg, type = 'success') {
-        let displayMsg = msg;
-        if (typeof msg === 'string' && (msg.includes("exceeded D1's free tier daily row read limit") || msg.includes("D1_ERROR"))) {
-            displayMsg = "⚠️ Хмарна база тимчасово перевищила безкоштовний добовий ліміт запитів Cloudflare D1. Режим читання відновиться опівночі UTC або після переходу на платний план. Ви можете продовжувати роботу в демо-режимі!";
-        }
+        const displayMsg = type === 'error' ? formatErrorMessage(msg) : msg;
         const id = Date.now() + Math.random().toString(36).substring(2, 6);
         const toast = { id, message: displayMsg, type };
         this.toasts.push(toast);

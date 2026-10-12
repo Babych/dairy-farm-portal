@@ -1,0 +1,61 @@
+// Localization Service & Helpers (i18n.js)
+import { uk } from './uk.js';
+import { en } from './en.js';
+
+export const dictionaries = { uk, en };
+
+export function getCurrentLang() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paramLang = urlParams.get('lang');
+    if (paramLang && (paramLang.toLowerCase() === 'en' || paramLang.toLowerCase() === 'uk')) {
+        return paramLang.toLowerCase();
+    }
+    return localStorage.getItem("dairy_lang") || 'uk';
+}
+
+export function t(key, fallback = "") {
+    const lang = getCurrentLang();
+    const dict = dictionaries[lang] || dictionaries.uk;
+    return dict[key] || fallback || key;
+}
+
+export function formatErrorMessage(err) {
+    if (!err) return t('errGeneric', 'Unknown system error occurred');
+    const msg = typeof err === 'string' ? err : (err.message || String(err));
+
+    // Handle Cloudflare D1 free-tier quota exhaustion
+    if (msg.includes("exceeded D1's free tier daily row read limit") || msg.includes("D1_ERROR")) {
+        return t('errD1Quota');
+    }
+
+    // Handle network disconnection
+    if (!navigator.onLine || msg.includes("Failed to fetch") || msg.includes("NetworkError")) {
+        return t('errNetworkOffline');
+    }
+
+    return msg;
+}
+
+export function applyLanguage(lang) {
+    localStorage.setItem("dairy_lang", lang);
+    document.documentElement.lang = lang;
+    const canonicalTag = document.getElementById('canonicalTag');
+    if (canonicalTag) {
+        canonicalTag.href = lang === 'en' ? 'https://dairy-farm-portal.pages.dev/?lang=en' : 'https://dairy-farm-portal.pages.dev/';
+    }
+
+    const ukBtn = document.getElementById('langUkBtn');
+    const enBtn = document.getElementById('langEnBtn');
+    if (ukBtn) ukBtn.className = lang === 'uk' ? 'px-2.5 py-1 rounded-lg bg-emerald-600 text-white transition shadow-sm' : 'px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition';
+    if (enBtn) enBtn.className = lang === 'en' ? 'px-2.5 py-1 rounded-lg bg-emerald-600 text-white transition shadow-sm' : 'px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition';
+
+    const dict = dictionaries[lang] || dictionaries.uk;
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const k = el.getAttribute('data-i18n');
+        if (dict[k]) el.textContent = dict[k];
+    });
+    document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+        const k = el.getAttribute('data-i18n-ph');
+        if (dict[k]) el.setAttribute('placeholder', dict[k]);
+    });
+}
