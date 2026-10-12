@@ -86,6 +86,37 @@ export async function updateOutboxCount() {
     }
 }
 
+export async function getOutboxItems() {
+    try {
+        const db = await openOutboxDB();
+        const tx = db.transaction(STORE_NAME, "readonly");
+        const storeObj = tx.objectStore(STORE_NAME);
+        return new Promise((resolve) => {
+            const req = storeObj.getAll();
+            req.onsuccess = () => resolve(req.result || []);
+            req.onerror = () => resolve([]);
+        });
+    } catch (e) {
+        return [];
+    }
+}
+
+export async function deleteOutboxItem(id) {
+    try {
+        const db = await openOutboxDB();
+        const tx = db.transaction(STORE_NAME, "readwrite");
+        const storeObj = tx.objectStore(STORE_NAME);
+        storeObj.delete(id);
+        await updateOutboxCount();
+        store.addToast("Запис видалено з черги офлайн", "info");
+        return true;
+    } catch (e) {
+        console.warn("Failed to delete outbox item", e);
+        return false;
+    }
+}
+
+
 export async function flushOfflineOutbox() {
     if (!navigator.onLine) return;
     try {

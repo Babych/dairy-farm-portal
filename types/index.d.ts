@@ -67,6 +67,9 @@ declare global {
         herdModule: any;
         dashboardModule: any;
         queueOfflineMutation: any;
+        getOutboxItems: any;
+        deleteOutboxItem: any;
+        flushOfflineOutbox: any;
         setLanguage: any;
         t: any;
         openCow360?: (id: string) => void;

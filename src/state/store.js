@@ -22,6 +22,7 @@ export const store = reactive({
     isLoading: false,
     isOnline: navigator.onLine,
     outboxCount: 0,
+    outboxItems: [],
 
     // Toasts
     toasts: [],

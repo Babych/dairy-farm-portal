@@ -4,7 +4,7 @@ import { store } from './state/store.js';
 import { farmsModule } from './modules/farms.js';
 import { herdModule } from './modules/herd.js';
 import { dashboardModule } from './modules/dashboard.js';
-import { flushOfflineOutbox, queueOfflineMutation } from './api/client.js';
+import { flushOfflineOutbox, queueOfflineMutation, getOutboxItems, deleteOutboxItem } from './api/client.js';
 import { applyLanguage, getCurrentLang, t } from './locales/i18n.js';
 
 // Expose on window for easy interoperability with existing modal handlers and onclick scripts
@@ -13,6 +13,9 @@ window.farmsModule = farmsModule;
 window.herdModule = herdModule;
 window.dashboardModule = dashboardModule;
 window.queueOfflineMutation = queueOfflineMutation;
+window.getOutboxItems = getOutboxItems;
+window.deleteOutboxItem = deleteOutboxItem;
+window.flushOfflineOutbox = flushOfflineOutbox;
 window.setLanguage = applyLanguage;
 window.t = t;
 
@@ -73,6 +76,12 @@ export function initApp() {
                 updateTileHighlight(herdModule.statusFilter);
             }
         },
+
+        async deleteQueueItem(id) {
+            await deleteOutboxItem(id);
+            store.outboxItems = await getOutboxItems();
+        },
+
 
         async mounted() {
             applyLanguage(getCurrentLang());
