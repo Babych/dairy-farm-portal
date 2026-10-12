@@ -177,7 +177,7 @@ export const en = {
     installModalBtnInstall: "Install Now",
 
     // Error messages & Explanations
-    errD1Quota: "⚠️ Cloud database temporarily exceeded daily free tier row read quota. Read operations will restore automatically at midnight UTC or on paid plan upgrade. You can continue testing in Demo mode!",
+    errD1Quota: "⚠️ Cloud database temporarily exceeded daily free tier row read quota. Read operations will restore automatically at midnight UTC or on paid plan upgrade.",
     errNetworkOffline: "No internet connection detected. Action was safely queued into offline outbox and will sync automatically upon reconnection.",
     errFarmSwitch: "Failed to switch active farm database",
     errLoadAnimals: "Failed to load animals list",
