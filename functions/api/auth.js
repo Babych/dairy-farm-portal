@@ -105,9 +105,17 @@ export async function handleAuth({ path, method, request, env, db, jsonResponse 
         let user = await db.prepare("SELECT * FROM users WHERE email = ?").bind(email).first();
         if (!user) {
             const newId = crypto.randomUUID();
-            const defaultFarm = await db.prepare("SELECT id FROM farms LIMIT 1").first();
-            await db.prepare("INSERT INTO users (id, email, full_name, role, farm_id, is_active, last_login_at, login_count) VALUES (?, ?, 'Адміністратор Ферми', 'superadmin', ?, 1, datetime('now'), 1)")
-                .bind(newId, email, defaultFarm?.id || null)
+            const userFarmId = crypto.randomUUID();
+            const userFarmCode = `FARM_${Date.now().toString(36).toUpperCase()}`;
+            const userFarmName = `Моя ферма`;
+
+            await db.prepare(`
+                INSERT INTO farms (id, code, name, farmer_name, owner_email, created_at)
+                VALUES (?, ?, ?, 'Власник', ?, datetime('now'))
+            `).bind(userFarmId, userFarmCode, userFarmName, email).run();
+
+            await db.prepare("INSERT INTO users (id, email, full_name, role, farm_id, is_active, last_login_at, login_count) VALUES (?, ?, 'Адміністратор Ферми', 'farmer', ?, 1, datetime('now'), 1)")
+                .bind(newId, email, userFarmId)
                 .run();
             user = await db.prepare("SELECT * FROM users WHERE id = ?").bind(newId).first();
         } else {

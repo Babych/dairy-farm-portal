@@ -25,11 +25,13 @@ export const uk = {
     vetChecklistBtn: "Ветеринарний чекліст",
     cowSearchPlaceholder: "Пошук за номером, биркою або кличкою...",
     optAllStatuses: "Всі статуси",
-    optActive: "Active (Дійна)",
-    optPregnant: "Pregnant (Тільна)",
-    optDry: "Dry (Сухостій)",
-    optInseminated: "Inseminated (Осіменена)",
-    optCulled: "Culled (Брак)",
+    optActive: "Дійна",
+    optPregnant: "Тільна",
+    optDry: "Сухостійна",
+    optInseminated: "Осіменена",
+    optFresh: "Новотільна (0-30 дн.)",
+    optQuarantine: "Каренція (бракераж молока)",
+    optCulled: "Брак / Вибула",
     addCowBtn: "Додати корову",
 
     // Animals Table
@@ -47,18 +49,18 @@ export const uk = {
     btnNext: "Наступна",
 
     // Herd Status Tiles
-    tileOpenTitle: "Open (Готові до осім.)",
-    tileOpenSub: "Охота / Сервіс",
-    tileInsTitle: "Inseminated (Осіменені)",
-    tileInsSub: "Очікують УЗД",
-    tilePregTitle: "Pregnant (Тільні)",
-    tilePregSub: "Підтверджено",
-    tileDryTitle: "Dry (Сухостій)",
-    tileDrySub: "Перед отелом",
-    tileFreshTitle: "Fresh (Новотільні)",
-    tileFreshSub: "0-30 днів лактації",
+    tileOpenTitle: "Готові до осіменіння",
+    tileOpenSub: "Охота / Сервіс-період",
+    tileInsTitle: "Осіменені",
+    tileInsSub: "Очікують ректального УЗД",
+    tilePregTitle: "Тільні",
+    tilePregSub: "Тільність підтверджено",
+    tileDryTitle: "Сухостійні",
+    tileDrySub: "Перед отелом (запуск)",
+    tileFreshTitle: "Новотільні",
+    tileFreshSub: "0-30 днів після отелу",
     tileQuarTitle: "Каренція / Бракераж",
-    tileQuarSub: "Антибіотики",
+    tileQuarSub: "Карантин молока (антибіотики)",
 
     // Smart Action Lists
     actionMilkWithhold: "Бракераж молока (Каренція антибіотиків)",
@@ -182,5 +184,9 @@ export const uk = {
     errFarmSwitch: "Не вдалося перемкнути базу ферми",
     errLoadAnimals: "Не вдалося завантажити список тварин",
     errLoadFarms: "Не вдалося завантажити список господарств",
-    errImportFailed: "Помилка імпорту бази даних"
+    errImportFailed: "Помилка імпорту бази даних",
+
+    // Farm Passport
+    passCurrentHerdLabel: "Поточне поголів'я в базі:",
+    passCurrentHerdHint: "Розраховується автоматично за реєстром тварин"
 };

@@ -132,9 +132,45 @@ export async function handleFarms({ path, method, request, url, env, db, jsonRes
                 VALUES (?, 'FARM', ?, 'DELETE', ?, datetime('now'))
             `).bind(crypto.randomUUID(), farmId, `Видалено ферму '${targetFarm.name}'`).run();
 
+            // Decode caller user context
+            const auth = request.headers.get("authorization") || "";
+            let userEmail = null;
+            let userRole = null;
+            if (auth.startsWith("Bearer ")) {
+                try {
+                    const tokenPart = auth.split(" ")[1];
+                    const decoded = JSON.parse(atob(tokenPart.split(".")[1]));
+                    userEmail = decoded.sub || null;
+                    userRole = decoded.role || null;
+                } catch (e) {}
+            }
+
+            // Find next available farm for this user
+            const remainingFarms = await FarmRepository.listFarms(db, { userEmail, userRole });
+            const nextFarm = remainingFarms.length > 0 ? remainingFarms[0] : null;
+
+            let updatedToken = null;
+            if (userEmail && nextFarm) {
+                // Update user's active farm in DB
+                await db.prepare("UPDATE users SET farm_id = ? WHERE email = ?").bind(nextFarm.id, userEmail).run();
+
+                const jwtSecret = env?.JWT_SECRET_KEY || "ephemeral_local_dev_token_key_change_in_prod";
+                const payload = {
+                    sub: userEmail,
+                    role: userRole || "farmer",
+                    farm_id: nextFarm.id,
+                    exp: Math.floor(Date.now() / 1000) + 86400 * 7
+                };
+                updatedToken = await signJWT(payload, jwtSecret);
+            } else if (userEmail) {
+                await db.prepare("UPDATE users SET farm_id = NULL WHERE email = ?").bind(userEmail).run();
+            }
+
             return jsonResponse({
                 status: "success",
-                message: `Ферму '${targetFarm.name}' та всі пов'язані дані видалено.`
+                message: `Ферму '${targetFarm.name}' та всі пов'язані дані видалено.`,
+                next_farm_id: nextFarm ? nextFarm.id : null,
+                access_token: updatedToken
             });
         } catch (e) {
             return jsonResponse({ detail: `Помилка видалення ферми: ${e.message}` }, 500);

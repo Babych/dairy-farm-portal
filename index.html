@@ -278,15 +278,15 @@
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
             <button onclick="filterByHerdStatus('Active')" id="tileBtnOpen" class="herd-tile-btn text-left bg-blue-50/70 hover:bg-blue-100/70 border border-blue-200 rounded-2xl p-4 shadow-sm transition hover:shadow-md cursor-pointer flex flex-col justify-between group">
                 <div class="flex justify-between items-center w-full">
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-blue-700" data-i18n="tileOpenTitle">Open (Готові)</span>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-blue-700" data-i18n="tileOpenTitle">Готові до осіменіння</span>
                     <span id="tileOpenPct" class="text-[10px] font-semibold text-blue-600 bg-blue-100/80 px-1.5 py-0.5 rounded-full">0%</span>
                 </div>
                 <h4 id="tileOpen" class="text-2xl font-black text-blue-900 my-1 group-hover:scale-105 transition-transform origin-left">0</h4>
-                <p class="text-[10px] text-blue-600" data-i18n="tileOpenSub">Охота / Сервіс</p>
+                <p class="text-[10px] text-blue-600" data-i18n="tileOpenSub">Охота / Сервіс-період</p>
             </button>
             <button onclick="filterByHerdStatus('Inseminated')" id="tileBtnIns" class="herd-tile-btn text-left bg-amber-50/70 hover:bg-amber-100/70 border border-amber-200 rounded-2xl p-4 shadow-sm transition hover:shadow-md cursor-pointer flex flex-col justify-between group">
                 <div class="flex justify-between items-center w-full">
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700" data-i18n="tileInsTitle">Inseminated</span>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700" data-i18n="tileInsTitle">Осімененi</span>
                     <span id="tileInsPct" class="text-[10px] font-semibold text-amber-700 bg-amber-100/80 px-1.5 py-0.5 rounded-full">0%</span>
                 </div>
                 <h4 id="tileIns" class="text-2xl font-black text-amber-900 my-1 group-hover:scale-105 transition-transform origin-left">0</h4>
@@ -294,7 +294,7 @@
             </button>
             <button onclick="filterByHerdStatus('Pregnant')" id="tileBtnPreg" class="herd-tile-btn text-left bg-emerald-50/70 hover:bg-emerald-100/70 border border-emerald-200 rounded-2xl p-4 shadow-sm transition hover:shadow-md cursor-pointer flex flex-col justify-between group">
                 <div class="flex justify-between items-center w-full">
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700" data-i18n="tilePregTitle">Pregnant (Тільні)</span>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700" data-i18n="tilePregTitle">Тільні</span>
                     <span id="tilePregPct" class="text-[10px] font-semibold text-emerald-700 bg-emerald-100/80 px-1.5 py-0.5 rounded-full">0%</span>
                 </div>
                 <h4 id="tilePreg" class="text-2xl font-black text-emerald-900 my-1 group-hover:scale-105 transition-transform origin-left">0</h4>
@@ -302,7 +302,7 @@
             </button>
             <button onclick="filterByHerdStatus('Dry')" id="tileBtnDry" class="herd-tile-btn text-left bg-orange-50/70 hover:bg-orange-100/70 border border-orange-200 rounded-2xl p-4 shadow-sm transition hover:shadow-md cursor-pointer flex flex-col justify-between group">
                 <div class="flex justify-between items-center w-full">
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-orange-700" data-i18n="tileDryTitle">Dry (Сухостій)</span>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-orange-700" data-i18n="tileDryTitle">Сухостійні</span>
                     <span id="tileDryPct" class="text-[10px] font-semibold text-orange-700 bg-orange-100/80 px-1.5 py-0.5 rounded-full">0%</span>
                 </div>
                 <h4 id="tileDry" class="text-2xl font-black text-orange-900 my-1 group-hover:scale-105 transition-transform origin-left">0</h4>
@@ -310,7 +310,7 @@
             </button>
             <button onclick="filterByHerdStatus('Fresh')" id="tileBtnFresh" class="herd-tile-btn text-left bg-cyan-50/70 hover:bg-cyan-100/70 border border-cyan-200 rounded-2xl p-4 shadow-sm transition hover:shadow-md cursor-pointer flex flex-col justify-between group">
                 <div class="flex justify-between items-center w-full">
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-cyan-700" data-i18n="tileFreshTitle">Fresh (Новотільні)</span>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-cyan-700" data-i18n="tileFreshTitle">Новотільні</span>
                     <span id="tileFreshPct" class="text-[10px] font-semibold text-cyan-700 bg-cyan-100/80 px-1.5 py-0.5 rounded-full">0%</span>
                 </div>
                 <h4 id="tileFresh" class="text-2xl font-black text-cyan-900 my-1 group-hover:scale-105 transition-transform origin-left">0</h4>
@@ -482,13 +482,13 @@
                                    class="w-full bg-slate-50 border border-slate-300 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition">
                         </div>
                         <select id="statusFilter" onchange="onStatusFilterDropdownChange()" class="bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:border-emerald-500">
-                            <option value="Active" selected data-i18n="optActive">Active (Дійна / В лактації)</option>
-                            <option value="Inseminated" data-i18n="optInseminated">Inseminated (Осіменена)</option>
-                            <option value="Pregnant" data-i18n="optPregnant">Pregnant (Тільна)</option>
-                            <option value="Dry" data-i18n="optDry">Dry (Сухостій)</option>
-                            <option value="Fresh">Fresh (Новотільна 0-30 дн.)</option>
-                            <option value="Quarantine" data-i18n="optQuarantine">Каренція (Бракераж молока)</option>
-                            <option value="Culled" data-i18n="optCulled">Culled (Вибула / Брак)</option>
+                            <option value="Active" selected data-i18n="optActive">Дійна</option>
+                            <option value="Inseminated" data-i18n="optInseminated">Осіменена</option>
+                            <option value="Pregnant" data-i18n="optPregnant">Тільна</option>
+                            <option value="Dry" data-i18n="optDry">Сухостійна</option>
+                            <option value="Fresh" data-i18n="optFresh">Новотільна (0-30 дн.)</option>
+                            <option value="Quarantine" data-i18n="optQuarantine">Каренція (бракераж молока)</option>
+                            <option value="Culled" data-i18n="optCulled">Брак / Вибула</option>
                             <option value="ALL" data-i18n="optAllStatuses">Всі статуси (Повне стадо)</option>
                         </select>
                     </div>
@@ -1525,7 +1525,10 @@
                     </div>
                 </div>
                 <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 flex justify-between items-center">
-                    <span class="text-slate-500 font-semibold">Поточне поголів'я в базі:</span>
+                    <div>
+                        <span class="text-slate-700 text-xs font-semibold block" data-i18n="passCurrentHerdLabel">Поточне поголів'я в базі:</span>
+                        <span class="text-[10px] text-slate-400" data-i18n="passCurrentHerdHint">Розраховується автоматично за реєстром корів</span>
+                    </div>
                     <span id="passCowCount" class="font-black text-emerald-600 text-sm">0 голів</span>
                 </div>
 
@@ -2498,12 +2501,22 @@
                     localStorage.setItem("dairy_token", token);
                 }
 
+                // If deleted farm was saved in localStorage, clear it
+                const savedFarmId = localStorage.getItem("dairy_selected_farm");
+                if (savedFarmId === currentFarm.id) {
+                    if (d.next_farm_id) {
+                        localStorage.setItem("dairy_selected_farm", d.next_farm_id);
+                    } else {
+                        localStorage.removeItem("dairy_selected_farm");
+                    }
+                }
+
                 // Reload farms and dashboard
                 await loadFarms();
                 if (d.next_farm_id) {
-                    onFarmDropdownChange(d.next_farm_id);
+                    onFarmDropdownChange(d.next_farm_id, false);
                 } else if (farmsList.length > 0) {
-                    onFarmDropdownChange(farmsList[0].id);
+                    onFarmDropdownChange(farmsList[0].id, false);
                 } else {
                     loadStats();
                     loadAnimals();

@@ -29,6 +29,8 @@ export const en = {
     optPregnant: "Pregnant (Confirmed)",
     optDry: "Dry (Dry-Off)",
     optInseminated: "Inseminated (Bred)",
+    optFresh: "Fresh (0-30 DIM)",
+    optQuarantine: "Quarantine (Withholding)",
     optCulled: "Culled",
     addCowBtn: "Add Animal",
 
@@ -182,5 +184,9 @@ export const en = {
     errFarmSwitch: "Failed to switch active farm database",
     errLoadAnimals: "Failed to load animals list",
     errLoadFarms: "Failed to load farms list",
-    errImportFailed: "Database import failed"
+    errImportFailed: "Database import failed",
+
+    // Farm Passport
+    passCurrentHerdLabel: "Current Livestock in Database:",
+    passCurrentHerdHint: "Calculated automatically from animals registry"
 };
