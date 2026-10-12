@@ -217,10 +217,6 @@
             <button id="headerInstallBtn" onclick="openInstallModal()" title="Встановити додаток на смартфон / Офлайн доступ" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
                 <i class="fa-solid fa-mobile-screen-button text-emerald-600"></i> <span class="hidden sm:inline" data-i18n="installAppBtn">Встановити апп</span><span class="sm:hidden text-[11px]">Апп</span>
             </button>
-            <!-- Quick refresh button -->
-            <button id="headerRefreshBtn" onclick="refreshDashboardData(true)" title="Швидке оновлення даних ферми" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 border border-slate-200">
-                <i id="headerRefreshIcon" class="fa-solid fa-arrows-rotate text-emerald-600 transition-transform"></i> <span class="hidden sm:inline">Оновити</span>
-            </button>
             <!-- Backup download button (shown only when authenticated) -->
             <button id="headerBackupBtn" onclick="downloadBackup()" title="Завантажити резервну копію бази даних" class="hidden bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition items-center gap-1.5 border border-slate-200">
                 <i class="fa-solid fa-download text-emerald-600"></i> <span class="hidden sm:inline">Бекап</span>
@@ -672,11 +668,19 @@
                     </table>
                 </div>
 
-                <div class="flex justify-between items-center text-xs text-slate-500 pt-2">
-                    <span id="animalsCountLabel">Показано 0 записів</span>
-                    <div class="flex gap-2">
-                        <button onclick="prevPage()" id="prevPageBtn" disabled class="px-3 py-1.5 rounded-lg border border-slate-300 disabled:opacity-40 hover:bg-slate-100" data-i18n="btnPrev">Попередня</button>
-                        <button onclick="nextPage()" id="nextPageBtn" class="px-3 py-1.5 rounded-lg border border-slate-300 disabled:opacity-40 hover:bg-slate-100" data-i18n="btnNext">Наступна</button>
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-slate-500 pt-3 border-t border-slate-100">
+                    <div class="flex items-center gap-2">
+                        <span id="animalsCountLabel" class="font-medium text-slate-700">Показано 0 із 0</span>
+                        <span id="animalsRangeBadge" class="hidden sm:inline bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-mono text-[11px]"></span>
+                    </div>
+                    <div class="flex items-center gap-1.5" id="paginationControlsContainer">
+                        <button onclick="prevPage()" id="prevPageBtn" disabled class="px-2.5 py-1.5 rounded-lg border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 font-medium transition flex items-center gap-1">
+                            <i class="fa-solid fa-chevron-left text-[10px]"></i> <span data-i18n="btnPrev">Попередня</span>
+                        </button>
+                        <div id="paginationPagesList" class="flex items-center gap-1"></div>
+                        <button onclick="nextPage()" id="nextPageBtn" class="px-2.5 py-1.5 rounded-lg border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 font-medium transition flex items-center gap-1">
+                            <span data-i18n="btnNext">Наступна</span> <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -2155,18 +2159,9 @@
             // Default on root page if no session: show Login Screen (with Google Auth & Demo button)
             document.getElementById('onboardingScreen').classList.add('hidden');
             document.getElementById('loginScreen').classList.remove('hidden');
-                document.getElementById('appDashboard').classList.add('hidden');
-
-                // Header buttons state when unauthenticated:
-                document.getElementById('headerBackupBtn')?.classList.add('hidden');
-
-            } catch (err) {
-                console.warn("System status error, falling back to login screen", err);
-                document.getElementById('onboardingScreen').classList.add('hidden');
-                document.getElementById('loginScreen').classList.remove('hidden');
-                document.getElementById('appDashboard').classList.add('hidden');
-                document.getElementById('headerBackupBtn')?.classList.add('hidden');
-            }
+            document.getElementById('appDashboard').classList.add('hidden');
+            document.getElementById('headerBackupBtn')?.classList.add('hidden');
+            renderGoogleSignInButton();
         }
 
         // 2. First Run Setup
@@ -2273,6 +2268,28 @@
 
         function openLoginModal() {
             document.getElementById('importAuthRequiredModal').classList.remove('hidden');
+            renderGoogleSignInButton();
+        }
+
+        function renderGoogleSignInButton() {
+            try {
+                if (window.google?.accounts?.id) {
+                    window.google.accounts.id.initialize({
+                        client_id: "733707845450-vui70uu318k17qvfjicu4tb5q2dsdrdg.apps.googleusercontent.com",
+                        callback: handleGoogleCredentialResponse,
+                        auto_prompt: false
+                    });
+                    const containers = document.querySelectorAll('.g_id_signin');
+                    containers.forEach(container => {
+                        window.google.accounts.id.renderButton(
+                            container,
+                            { type: 'standard', size: 'large', theme: 'outline', text: 'sign_in_with', shape: 'pill', width: 280 }
+                        );
+                    });
+                }
+            } catch (gErr) {
+                console.warn("[Google Auth] Error re-rendering Google Sign-In button:", gErr);
+            }
         }
 
         function logout() {
@@ -2286,18 +2303,23 @@
             document.getElementById('headerUserChip')?.classList.add('hidden');
             document.getElementById('headerBackupBtn')?.classList.add('hidden');
             document.getElementById('loginScreen').classList.remove('hidden');
+
+            renderGoogleSignInButton();
         }
 
         function navigateToHome(e) {
             if (e) e.preventDefault();
-            sessionStorage.removeItem("dairy_demo_active");
-            if (token === "demo_mode_token" || currentUser?.role === "guest" || currentUser?.id === "demo-user-guest") {
-                localStorage.removeItem("dairy_token");
-                localStorage.removeItem("dairy_user");
-                token = null;
-                currentUser = null;
+            // If user is actively logged in (either real account or demo mode), stay on dashboard!
+            if (token) {
+                showDashboard();
+                switchTab('animals');
+                return;
             }
-            window.location.href = "/";
+            // Only if unauthenticated, show login screen without reloading page
+            document.getElementById('appDashboard').classList.add('hidden');
+            document.getElementById('onboardingScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            renderGoogleSignInButton();
         }
 
         // 5. Dashboard View
@@ -2369,13 +2391,8 @@
                     loadUsers();
                     loadAdminMetrics();
                 }
-
-                if (showFeedback) {
-                    showToast("✓ Дані ферми оновлено", "success");
-                    if (navigator.vibrate) navigator.vibrate(25);
-                }
             } catch (err) {
-                if (showFeedback) showToast("Не вдалося оновити дані", "error");
+                console.warn("[Refresh] Data update failed:", err);
             } finally {
                 if (refreshIcon) refreshIcon.classList.remove('fa-spin');
                 isRefreshingData = false;
@@ -3047,19 +3064,24 @@
                     return;
                 }
 
+                const formatDateCell = (d) => {
+                    if (!d || d === 'null' || d === 'undefined') return '';
+                    return d;
+                };
+
                 tb.innerHTML = data.items.map(a => `
                     <tr class="hover:bg-slate-50 transition border-b border-slate-100">
                         <td class="p-3 font-bold text-slate-900">${a.farm_number}</td>
                         <td class="p-3 font-mono text-slate-500">${a.official_tag || '-'}</td>
                         <td class="p-3 font-medium text-slate-800">${a.name || '-'}</td>
-                        <td class="p-3">${a.lactation_number}</td>
+                        <td class="p-3 font-semibold text-slate-700">${a.lactation_number || 0}</td>
                         <td class="p-3">
                             <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold ${getStatusBadgeClass(a.current_status)}">
                                 ${a.current_status}
                             </span>
                         </td>
-                        <td class="p-3 text-slate-500">${a.last_calving_date || '-'}</td>
-                        <td class="p-3 text-slate-500">${a.expected_calving_date || '-'}</td>
+                        <td class="p-3 text-slate-600 font-mono text-xs">${formatDateCell(a.last_calving_date)}</td>
+                        <td class="p-3 text-slate-600 font-mono text-xs">${formatDateCell(a.expected_calving_date)}</td>
                         <td class="p-3 text-slate-500">${a.group_name || 'Група 1'}</td>
                         <td class="p-3 text-right">
                             <button onclick="openCow360('${a.id}')" class="bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 px-2.5 py-1.5 rounded-lg font-semibold transition">
@@ -3068,19 +3090,69 @@
                         </td>
                     </tr>
                 `).join('');
+
                 const fromNum = data.total > 0 ? (curOffset + 1) : 0;
                 const toNum = Math.min(curOffset + data.items.length, data.total);
                 const currentPage = Math.floor(curOffset / PAGE_LIMIT) + 1;
                 const totalPages = Math.max(1, Math.ceil(data.total / PAGE_LIMIT));
 
-                document.getElementById('animalsCountLabel').textContent = `Сторінка ${currentPage} з ${totalPages} • Показано ${fromNum}-${toNum} із ${data.total}`;
+                document.getElementById('animalsCountLabel').textContent = `Сторінка ${currentPage} з ${totalPages}`;
+                const badgeEl = document.getElementById('animalsRangeBadge');
+                if (badgeEl) {
+                    badgeEl.textContent = `${fromNum}–${toNum} із ${data.total}`;
+                }
+
                 document.getElementById('prevPageBtn').disabled = curOffset === 0;
                 document.getElementById('nextPageBtn').disabled = curOffset + PAGE_LIMIT >= data.total;
+
+                // Render numbered page buttons (e.g. 1, 2, 3 ... or near current page)
+                renderPageButtons(currentPage, totalPages);
 
             } catch (err) {
                 console.error(err);
                 tb.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-rose-500">Помилка завантаження даних</td></tr>`;
             }
+        }
+
+        function renderPageButtons(current, total) {
+            const container = document.getElementById('paginationPagesList');
+            if (!container) return;
+            if (total <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+
+            const pages = [];
+            if (total <= 6) {
+                for (let i = 1; i <= total; i++) pages.push(i);
+            } else {
+                pages.push(1);
+                if (current > 3) pages.push('...');
+                const start = Math.max(2, current - 1);
+                const end = Math.min(total - 1, current + 1);
+                for (let i = start; i <= end; i++) {
+                    if (!pages.includes(i)) pages.push(i);
+                }
+                if (current < total - 2) pages.push('...');
+                if (!pages.includes(total)) pages.push(total);
+            }
+
+            container.innerHTML = pages.map(p => {
+                if (p === '...') {
+                    return `<span class="px-1 text-slate-400 text-xs">…</span>`;
+                }
+                const isActive = p === current;
+                return `
+                    <button onclick="goToPage(${p})" class="w-7 h-7 rounded-lg text-xs font-semibold transition flex items-center justify-center ${isActive ? 'bg-emerald-600 text-white shadow-sm' : 'border border-slate-200 text-slate-700 hover:bg-slate-100'}">
+                        ${p}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function goToPage(pageNum) {
+            curOffset = (pageNum - 1) * PAGE_LIMIT;
+            loadAnimals();
         }
 
         function prevPage() {
