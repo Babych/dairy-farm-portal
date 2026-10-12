@@ -1,23 +1,15 @@
 import { signJWT } from './crypto.js';
 import { FarmRepository } from './repositories/farmRepo.js';
 import { validateFarmInput } from './validation.js';
+import { getCallerUser, requireAuth } from './authGuard.js';
 
 export async function handleFarms({ path, method, request, url, env, db, jsonResponse }) {
     // 1. GET /api/farms
     if (path === "/api/farms" && method === "GET") {
-        const auth = request.headers.get("authorization") || "";
-        let userEmail = null;
-        let userRole = null;
-        let activeFarmId = url.searchParams.get("active_farm_id") || null;
-        if (auth.startsWith("Bearer ")) {
-            try {
-                const tokenPart = auth.split(" ")[1];
-                const decoded = JSON.parse(atob(tokenPart.split(".")[1]));
-                userEmail = decoded.sub || null;
-                userRole = decoded.role || null;
-                if (!activeFarmId) activeFarmId = decoded.farm_id || null;
-            } catch (e) {}
-        }
+        const caller = getCallerUser(request);
+        const userEmail = caller?.email || null;
+        let userRole = caller?.role || null;
+        let activeFarmId = url.searchParams.get("active_farm_id") || caller?.farm_id || null;
 
         if (userEmail) {
             try {
@@ -202,18 +194,11 @@ export async function handleFarms({ path, method, request, url, env, db, jsonRes
 
     // 6. POST /api/farms/clone-demo
     if (path === "/api/farms/clone-demo" && method === "POST") {
-        const auth = request.headers.get("authorization") || "";
-        let userEmail = null;
-        if (auth.startsWith("Bearer ")) {
-            try {
-                const tokenPart = auth.split(" ")[1];
-                const decoded = JSON.parse(atob(tokenPart.split(".")[1]));
-                userEmail = decoded.sub || null;
-            } catch (e) {}
-        }
-        if (!userEmail) {
+        const caller = getCallerUser(request);
+        if (!caller || !caller.email) {
             return jsonResponse({ detail: "Необхідна авторизація" }, 401);
         }
+        const userEmail = caller.email;
 
         const demoFarm = await db.prepare("SELECT * FROM farms WHERE owner_email IS NULL ORDER BY created_at ASC LIMIT 1").first();
         if (!demoFarm) {

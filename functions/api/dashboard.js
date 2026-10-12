@@ -1,5 +1,6 @@
 // Feature Module: Dashboard Analytics, Event Grid & Veterinary Action Lists
 // Flat 1-level collocation for AI vibe-coding
+import { MedicationRepository } from './repositories/medicationRepo.js';
 
 export async function handleDashboard({ path, method, request, url, db, jsonResponse, getActiveFarmId }) {
     // 1. GET /api/dashboard/stats
@@ -167,27 +168,7 @@ export async function handleDashboard({ path, method, request, url, db, jsonResp
 
     // 4. GET /api/medications
     if (path === "/api/medications" && method === "GET") {
-        const rawMeds = (await db.prepare("SELECT * FROM medications ORDER BY name ASC").all()).results || [];
-        const now = new Date();
-        const meds = rawMeds.map(m => {
-            let daysToExpire = null;
-            let statusExpiry = "OK";
-            if (m.expiration_date) {
-                const exp = new Date(m.expiration_date);
-                if (!isNaN(exp.getTime())) {
-                    daysToExpire = Math.ceil((exp.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-                    if (daysToExpire < 0) statusExpiry = "EXPIRED";
-                    else if (daysToExpire <= 30) statusExpiry = "EXPIRING_SOON";
-                }
-            }
-            return {
-                ...m,
-                milk_days: Number(m.default_milk_withdrawal_days ?? 0),
-                meat_days: Number(m.default_meat_withdrawal_days ?? 0),
-                days_to_expire: daysToExpire,
-                status_expiry: statusExpiry
-            };
-        });
+        const meds = await MedicationRepository.getAll(db);
         return jsonResponse(meds);
     }
 
@@ -200,31 +181,11 @@ export async function handleDashboard({ path, method, request, url, db, jsonResp
                 return jsonResponse({ detail: "Назва препарату є обов'язковою" }, 400);
             }
 
-            const medId = crypto.randomUUID();
-            const activeSubstance = body.active_substance || null;
-            const batchNumber = body.batch_number || null;
-            const expirationDate = body.expiration_date || null;
-            const stockQuantity = parseFloat(body.stock_quantity) || 0;
-            const unit = body.unit || "дози";
-            const milkDays = parseInt(body.default_milk_withdrawal_days) || 0;
-            const meatDays = parseInt(body.default_meat_withdrawal_days) || 0;
-            const instructions = body.instructions || null;
-
-            await db.prepare(`
-                INSERT INTO medications (
-                    id, name, active_substance, batch_number, expiration_date,
-                    stock_quantity, unit, default_milk_withdrawal_days, default_meat_withdrawal_days,
-                    instructions, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-            `).bind(
-                medId, name, activeSubstance, batchNumber, expirationDate,
-                stockQuantity, unit, milkDays, meatDays, instructions
-            ).run();
-
+            const created = await MedicationRepository.create(db, body);
             return jsonResponse({
                 status: "success",
-                message: `Препарат '${name}' успішно додано!`,
-                id: medId
+                message: `Препарат '${created.name}' успішно додано!`,
+                id: created.id
             }, 201);
         } catch (err) {
             return jsonResponse({ detail: `Помилка збереження препарату: ${err.message}` }, 500);
@@ -235,7 +196,7 @@ export async function handleDashboard({ path, method, request, url, db, jsonResp
     if (path.startsWith("/api/medications/") && method === "DELETE") {
         const medId = path.split("/")[3];
         try {
-            await db.prepare("DELETE FROM medications WHERE id = ?").bind(medId).run();
+            await MedicationRepository.deleteById(db, medId);
             return jsonResponse({ status: "success", message: "Препарат видалено" });
         } catch (err) {
             return jsonResponse({ detail: `Помилка видалення препарату: ${err.message}` }, 500);
