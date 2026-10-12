@@ -1,5 +1,6 @@
 // Feature Module: System Diagnostics, Admin Metrics, Logs & Uniform Import Forwarding
 // Flat 1-level collocation for AI vibe-coding
+import { requireAuth, getCallerUser } from './authGuard.js';
 
 export async function handleSystem({ path, method, request, url, env, db, jsonResponse }) {
     // 1. GET /api/system/status
@@ -24,6 +25,11 @@ export async function handleSystem({ path, method, request, url, env, db, jsonRe
 
     // 2. GET /api/admin/metrics
     if (path === "/api/admin/metrics" && method === "GET") {
+        try {
+            requireAuth(request, ['superadmin']);
+        } catch (authErr) {
+            return jsonResponse({ detail: authErr.message }, authErr.status || 403);
+        }
         const totalVisits = (await db.prepare("SELECT count(*) as c FROM site_visits").first())?.c || 0;
         const distinctIps = (await db.prepare("SELECT count(DISTINCT ip) as c FROM site_visits").first())?.c || 0;
         const recentVisits = (await db.prepare("SELECT * FROM site_visits ORDER BY created_at DESC LIMIT 20").all()).results;

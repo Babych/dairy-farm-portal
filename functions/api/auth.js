@@ -1,6 +1,5 @@
-// Feature Module: Authentication, Users & First-run Setup
-// Flat 1-level collocation for AI vibe-coding
 import { signJWT } from './crypto.js';
+import { requireAuth } from './authGuard.js';
 
 export async function handleAuth({ path, method, request, env, db, jsonResponse }) {
     // 1. POST /api/system/first-run
@@ -142,6 +141,11 @@ export async function handleAuth({ path, method, request, env, db, jsonResponse 
 
     // 4. GET /api/users
     if (path === "/api/users" && method === "GET") {
+        try {
+            requireAuth(request, ['superadmin']);
+        } catch (authErr) {
+            return jsonResponse({ detail: authErr.message }, authErr.status || 403);
+        }
         const users = (await db.prepare("SELECT id, email, full_name, role, google_sub, is_active, last_login_at, login_count, created_at FROM users ORDER BY created_at DESC").all()).results;
         return jsonResponse(users);
     }
