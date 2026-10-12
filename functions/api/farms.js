@@ -1,7 +1,6 @@
-// Feature Module: Farms Management & Switching
-// Uses Repository Layer (FarmRepository) for persistence decoupling
 import { signJWT } from './crypto.js';
 import { FarmRepository } from './repositories/farmRepo.js';
+import { validateFarmInput } from './validation.js';
 
 export async function handleFarms({ path, method, request, url, env, db, jsonResponse }) {
     // 1. GET /api/farms
@@ -89,14 +88,9 @@ export async function handleFarms({ path, method, request, url, env, db, jsonRes
     if (path.startsWith("/api/farms/") && method === "PUT") {
         const farmId = path.split("/")[3];
         const body = await request.json();
-        const farmName = (body.name || "").trim();
-        const farmerName = (body.farmer_name || "").trim();
-        const city = (body.city || "").trim();
-        const address = (body.address || "").trim();
-        const phone = (body.phone || "").trim();
-
-        if (!farmName) {
-            return jsonResponse({ detail: "Назва ферми не може бути порожньою" }, 400);
+        const validation = validateFarmInput(body);
+        if (!validation.isValid) {
+            return jsonResponse({ detail: validation.errors.join("; ") }, 400);
         }
 
         const targetFarm = await FarmRepository.getById(db, farmId);
@@ -104,23 +98,24 @@ export async function handleFarms({ path, method, request, url, env, db, jsonRes
             return jsonResponse({ detail: "Ферму не знайдено для оновлення" }, 404);
         }
 
+        const { sanitized } = validation;
         const updated = await FarmRepository.updatePassport(db, farmId, {
-            name: farmName,
-            farmerName,
-            city,
-            address,
-            phone
+            name: sanitized.name,
+            farmerName: sanitized.farmer_name,
+            city: sanitized.city,
+            address: sanitized.address,
+            phone: sanitized.phone
         });
 
         // Audit log
         await db.prepare(`
             INSERT INTO audit_logs (id, entity_type, entity_id, action, summary, created_at)
             VALUES (?, 'FARM', ?, 'UPDATE', ?, datetime('now'))
-        `).bind(crypto.randomUUID(), farmId, `Оновлено назву ферми на '${farmName}'`).run();
+        `).bind(crypto.randomUUID(), farmId, `Оновлено назву ферми на '${sanitized.name}'`).run();
 
         return jsonResponse({
             status: "success",
-            message: `Паспорт ферми '${farmName}' успішно оновлено!`,
+            message: `Паспорт ферми '${sanitized.name}' успішно оновлено!`,
             farm: updated
         });
     }

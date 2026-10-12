@@ -1,6 +1,5 @@
-// Feature Module: Animals Herd Management & Animal Details
-// Uses Repository Layer (AnimalRepository) for persistence decoupling
 import { AnimalRepository } from './repositories/animalRepo.js';
+import { validateAnimalInput } from './validation.js';
 
 export async function handleAnimals({ path, method, request, url, db, jsonResponse, getActiveFarmId }) {
     // 1. GET /api/animals
@@ -24,8 +23,24 @@ export async function handleAnimals({ path, method, request, url, db, jsonRespon
     // 2. POST /api/animals (Insert single animal or batch list)
     if (path === "/api/animals" && method === "POST") {
         const body = await request.json();
-        const items = Array.isArray(body) ? body : [body];
-        const inserted = await AnimalRepository.batchInsert(db, items);
+        const rawItems = Array.isArray(body) ? body : [body];
+        if (rawItems.length === 0) {
+            return jsonResponse({ detail: "No animal records provided" }, 400);
+        }
+
+        const validItems = [];
+        for (let i = 0; i < rawItems.length; i++) {
+            const v = validateAnimalInput(rawItems[i]);
+            if (!v.isValid) {
+                return jsonResponse({ detail: `Animal #${i + 1} validation failed: ${v.errors.join(', ')}` }, 400);
+            }
+            validItems.push({
+                ...v.sanitized,
+                farm_id: rawItems[i].farm_id || getActiveFarmId()
+            });
+        }
+
+        const inserted = await AnimalRepository.batchInsert(db, validItems);
         return jsonResponse({ status: "success", inserted_count: inserted }, 201);
     }
 
