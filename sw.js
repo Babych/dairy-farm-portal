@@ -1,6 +1,6 @@
 // DairyERP Service Worker (PWA Offline & Instant Cache)
 // Auto-incremented build token:
-const CACHE_VERSION = 'dairy-erp-v9075dca-mv4zvz9d';
+const CACHE_VERSION = 'dairy-erp-vccecfbf-mv4zxygq';
 
 const PRECACHE_ASSETS = [
   '/',

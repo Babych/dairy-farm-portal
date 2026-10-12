@@ -2341,13 +2341,10 @@
                 }
 
                 sel.innerHTML = farmsList.map(f => {
-                    let displayName = f.name || "Моя ферма";
-                    // Clean up overly verbose prefix for compact mobile view
-                    displayName = displayName.replace(/^Імпортована ферма\s*/i, '').replace(/^Ферма з\s*/i, '');
-                    if (!displayName.trim()) displayName = f.name;
+                    const farmName = (f.name || "Моя ферма").trim();
                     return `
-                        <option value="${f.id}" title="${f.name}" ${(currentFarm && f.id === currentFarm.id) ? 'selected' : ''}>
-                            ${displayName} (${f.cow_count || 0})
+                        <option value="${f.id}" title="${farmName}" ${(currentFarm && f.id === currentFarm.id) ? 'selected' : ''}>
+                            ${farmName} (${f.cow_count || 0})
                         </option>
                     `;
                 }).join('');
@@ -2440,7 +2437,7 @@
                 if (!res.ok) throw new Error(d.detail || "Помилка збереження паспорта");
                 showToast(d.message);
                 closeModal('farmPassportModal');
-                loadFarms();
+                await loadFarms();
             } catch (err) {
                 showToast(err.message, "error");
             } finally {
