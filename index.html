@@ -3814,8 +3814,14 @@
             if (paramLang && (paramLang.toLowerCase() === 'en' || paramLang.toLowerCase() === 'uk')) {
                 setLanguage(paramLang.toLowerCase());
             } else {
-                const savedLang = localStorage.getItem("dairy_lang") || 'uk';
-                setLanguage(savedLang);
+                const savedLang = localStorage.getItem("dairy_lang");
+                if (savedLang) {
+                    setLanguage(savedLang);
+                } else {
+                    const browserLang = (navigator.languages && navigator.languages[0]) || navigator.language || 'uk';
+                    const autoLang = browserLang.toLowerCase().startsWith('uk') ? 'uk' : 'en';
+                    setLanguage(autoLang);
+                }
             }
 
             // Enable demo view if ?demo=1 or ?mode=demo is passed in URL

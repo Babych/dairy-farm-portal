@@ -105,6 +105,18 @@ export async function onRequest(context) {
         return jsonResponse({ detail: `Route ${method} ${path} not found on Cloudflare Functions` }, 404);
 
     } catch (err) {
+        try {
+            await db.prepare(`
+                INSERT INTO system_logs (id, level, category, message, details, created_at)
+                VALUES (?, ?, ?, ?, ?, datetime('now'))
+            `).bind(
+                crypto.randomUUID(),
+                "ERROR",
+                "BACKEND_API",
+                `${method} ${path}: ${err.message}`,
+                err.stack || String(err)
+            ).run();
+        } catch (logErr) {}
         return jsonResponse({ detail: `Cloudflare D1 Error: ${err.message}` }, 500);
     }
 }

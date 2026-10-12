@@ -333,6 +333,19 @@ export async function handleSystem({ path, method, request, url, env, db, jsonRe
             }
 
             if (!parsed) {
+                try {
+                    await db.prepare(`
+                        INSERT INTO system_logs (id, level, category, message, details, created_at)
+                        VALUES (?, ?, ?, ?, ?, datetime('now'))
+                    `).bind(
+                        crypto.randomUUID(),
+                        "ERROR",
+                        "UNIFORM_IMPORT",
+                        `Помилка конвертації файлу ${file.name || 'FDB'}`,
+                        lastError
+                    ).run();
+                } catch (e) {}
+
                 return jsonResponse({
                     detail: `Не вдалося виконати автоматичну конвертацію бази: ${lastError}`
                 }, 502);

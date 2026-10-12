@@ -10,7 +10,12 @@ export function getCurrentLang() {
     if (paramLang && (paramLang.toLowerCase() === 'en' || paramLang.toLowerCase() === 'uk')) {
         return paramLang.toLowerCase();
     }
-    return localStorage.getItem("dairy_lang") || 'uk';
+    const saved = localStorage.getItem("dairy_lang");
+    if (saved) return saved;
+
+    // Detect browser/OS language: if Ukrainian -> 'uk', otherwise default to international 'en'
+    const browserLang = (navigator.languages && navigator.languages[0]) || navigator.language || 'uk';
+    return browserLang.toLowerCase().startsWith('uk') ? 'uk' : 'en';
 }
 
 export function t(key, fallback = "") {
