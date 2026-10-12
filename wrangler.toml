@@ -7,3 +7,8 @@ binding = "DB"
 database_name = "dairy-farm-db"
 database_id = "23d5107d-f30f-4a84-9dd7-d4516c9f5f60"
 
+[observability.logs]
+enabled = false
+invocation_logs = true
+
+
