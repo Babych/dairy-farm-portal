@@ -8,7 +8,7 @@
     "test:integration": "node test/test_health_check.js",
     "build:sw": "node scripts/stamp-sw.js",
     "build": "npm run build:sw && npx wrangler pages functions build",
-    "deploy": "npx wrangler pages deploy . --project-name=dairy-farm-portal"
+    "deploy": "npm run build:sw && npx wrangler pages deploy . --project-name=dairy-farm-portal"
   },
   "keywords": ["dairy", "cattle", "uniform-agri", "cloudflare-pages", "cloudflare-d1"],
   "author": "Dmytro Babych <memory1024@gmail.com>",
