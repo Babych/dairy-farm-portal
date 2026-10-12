@@ -6,19 +6,9 @@ import { handleAnimals } from './animals.js';
 import { handleDashboard } from './dashboard.js';
 import { handleAuth } from './auth.js';
 import { handleSystem } from './system.js';
+import { jsonResponse, jsonOk, jsonError } from './response.js';
 
-export function jsonResponse(data, status = 200, headers = {}) {
-    return new Response(JSON.stringify(data), {
-        status,
-        headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization",
-            ...headers
-        }
-    });
-}
+export { jsonResponse, jsonOk, jsonError };
 
 export async function onRequestOptions() {
     return new Response(null, {

@@ -6,6 +6,8 @@ export class AnimalRepository {
      * Search and paginate animals.
      */
     static async searchAnimals(db, { farmId = null, search = "", status = "ALL", limit = 50, offset = 0 } = {}) {
+        const safeLimit = Math.max(1, Math.min(Number(limit) || 50, 100));
+        const safeOffset = Math.max(0, Number(offset) || 0);
         let query = "SELECT * FROM animals WHERE 1=1";
         const params = [];
 
@@ -28,11 +30,11 @@ export class AnimalRepository {
         const total = (await db.prepare(countQuery).bind(...params).first())?.c || 0;
 
         query += " ORDER BY farm_number ASC LIMIT ? OFFSET ?";
-        params.push(limit, offset);
+        params.push(safeLimit, safeOffset);
 
         const rawItems = (await db.prepare(query).bind(...params).all()).results || [];
         const items = rawItems.map(row => new Animal(row).toJSON());
-        return { total, items, offset, limit };
+        return { total, items, offset: safeOffset, limit: safeLimit };
     }
 
     /**
