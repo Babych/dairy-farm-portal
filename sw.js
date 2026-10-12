@@ -1,6 +1,6 @@
 // DairyERP Service Worker (PWA Offline & Instant Cache)
 // Auto-incremented build token:
-const CACHE_VERSION = 'dairy-erp-v1eb96ea-mv502tw5';
+const CACHE_VERSION = 'dairy-erp-v6d4671a-mv5043kx';
 
 const PRECACHE_ASSETS = [
   '/',
@@ -65,23 +65,22 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // API endpoints: Stale-While-Revalidate for offline barn viewing
+  // API endpoints: Network-First with Offline Cache Fallback
+  // Guarantees newly created/edited cows, events, and stats are immediately fresh when online
   if (url.pathname.startsWith('/api/animals') || url.pathname.startsWith('/api/dashboard/stats')) {
     event.respondWith(
-      caches.open(CACHE_VERSION).then(async (cache) => {
+      fetch(req).then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const clone = networkResponse.clone();
+          caches.open(CACHE_VERSION).then((cache) => cache.put(req, clone));
+        }
+        return networkResponse;
+      }).catch(async (err) => {
+        console.warn('[SW Offline] Network failed, serving cached fallback for', url.pathname);
+        const cache = await caches.open(CACHE_VERSION);
         const cachedResponse = await cache.match(req);
-        const fetchPromise = fetch(req).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            cache.put(req, networkResponse.clone());
-          }
-          return networkResponse;
-        }).catch((err) => {
-          console.warn('[SW Offline] Network failed, serving cached fallback for', url.pathname);
-          return cachedResponse;
-        });
-
-        // Return cached immediately if available, otherwise wait for network
-        return cachedResponse || fetchPromise;
+        if (cachedResponse) return cachedResponse;
+        throw err;
       })
     );
     return;
