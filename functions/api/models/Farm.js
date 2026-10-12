@@ -14,6 +14,7 @@ export class Farm {
         this.cowCount = Number.isInteger(Number(row.cow_count)) ? Number(row.cow_count) : 0;
         this.isCurrent = Boolean(row.is_current);
         this.createdAt = row.created_at || null;
+        this.importedAt = row.imported_at || null;
     }
 
     /**
@@ -31,7 +32,8 @@ export class Farm {
             owner_email: this.ownerEmail,
             cow_count: this.cowCount,
             is_current: this.isCurrent ? 1 : 0,
-            created_at: this.createdAt
+            created_at: this.createdAt,
+            imported_at: this.importedAt
         };
     }
 }

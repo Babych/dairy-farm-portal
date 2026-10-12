@@ -349,9 +349,14 @@ export async function handleSystem({ path, method, request, url, env, db, jsonRe
             activeFarmId = crypto.randomUUID();
             const farmCode = `FARM_${Date.now().toString(36).toUpperCase()}`;
             await db.prepare(`
-                INSERT INTO farms (id, code, name, farmer_name, owner_email, created_at)
-                VALUES (?, ?, ?, ?, ?, datetime('now'))
+                INSERT INTO farms (id, code, name, farmer_name, owner_email, created_at, imported_at)
+                VALUES (?, ?, ?, ?, ?, datetime('now'), datetime('now'))
             `).bind(activeFarmId, farmCode, farmName, farmerName, reqUserEmail).run();
+        } else {
+            // Update imported_at timestamp on existing farm when new data is imported/merged
+            try {
+                await db.prepare("UPDATE farms SET imported_at = datetime('now') WHERE id = ?").bind(activeFarmId).run();
+            } catch (e) {}
         }
 
         // Batch insert animals into D1

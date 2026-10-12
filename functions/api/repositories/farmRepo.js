@@ -8,7 +8,7 @@ export class FarmRepository {
     static async listFarms(db, { userEmail = null, userRole = null, activeFarmId = null } = {}) {
         let query = `
             SELECT f.id, f.code, f.name, f.farmer_name, f.address, f.city, f.phone, f.owner_email,
-                   count(a.id) as cow_count, 0 as is_current, f.created_at
+                   count(a.id) as cow_count, 0 as is_current, f.created_at, f.imported_at
             FROM farms f
             LEFT JOIN animals a ON a.farm_id = f.id
         `;

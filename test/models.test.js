@@ -25,6 +25,18 @@ describe('Domain Models Suite', () => {
             assert.strictEqual(json.cow_count, 0);
             assert.strictEqual(json.is_current, 0);
             assert.strictEqual(json.farmer_name, null);
+            assert.strictEqual(json.created_at, null);
+            assert.strictEqual(json.imported_at, null);
+        });
+
+        it('retains created_at and imported_at lifecycle timestamps', () => {
+            const farm = new Farm({
+                created_at: '2026-01-10T12:00:00Z',
+                imported_at: '2026-10-12T09:30:00Z'
+            });
+            const json = farm.toJSON();
+            assert.strictEqual(json.created_at, '2026-01-10T12:00:00Z');
+            assert.strictEqual(json.imported_at, '2026-10-12T09:30:00Z');
         });
     });
 

@@ -1532,6 +1532,22 @@
                     <span id="passCowCount" class="font-black text-emerald-600 text-sm">0 голів</span>
                 </div>
 
+                <!-- Farm Lifecycle Timestamps (Creation & Import) -->
+                <div class="grid grid-cols-2 gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3 text-[11px]">
+                    <div>
+                        <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider mb-0.5 flex items-center gap-1">
+                            <i class="fa-solid fa-calendar-plus text-slate-400"></i> Створено в системі
+                        </span>
+                        <span id="passCreatedAt" class="font-semibold text-slate-700">-</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider mb-0.5 flex items-center gap-1">
+                            <i class="fa-solid fa-file-import text-indigo-500"></i> Останній імпорт бази
+                        </span>
+                        <span id="passImportedAt" class="font-semibold text-indigo-700">-</span>
+                    </div>
+                </div>
+
                 <div class="pt-2 flex justify-end gap-2">
                     <button type="submit" id="btnSavePassport" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl font-semibold flex items-center gap-1.5 transition shadow-sm">
                         <i class="fa-solid fa-floppy-disk"></i> Зберегти зміни
@@ -2403,6 +2419,32 @@
             document.getElementById('passAddressInput').value = currentFarm.address || "";
             document.getElementById('passPhoneInput').value = currentFarm.phone || "";
             document.getElementById('passCowCount').textContent = `${currentFarm.cow_count || 0} голів`;
+
+            // Format dates
+            const formatDt = (dtStr) => {
+                if (!dtStr) return "Не зафіксовано";
+                try {
+                    const d = new Date(dtStr);
+                    if (isNaN(d.getTime())) return dtStr;
+                    return d.toLocaleDateString("uk-UA", { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' +
+                           d.toLocaleTimeString("uk-UA", { hour: '2-digit', minute: '2-digit' });
+                } catch(e) { return dtStr; }
+            };
+
+            const createdEl = document.getElementById('passCreatedAt');
+            if (createdEl) createdEl.textContent = formatDt(currentFarm.created_at);
+
+            const importedEl = document.getElementById('passImportedAt');
+            if (importedEl) {
+                if (currentFarm.imported_at) {
+                    importedEl.textContent = formatDt(currentFarm.imported_at);
+                } else if (currentFarm.created_at && (currentFarm.cow_count > 0)) {
+                    importedEl.textContent = `${formatDt(currentFarm.created_at)} (Первинний імпорт)`;
+                } else {
+                    importedEl.textContent = "Ручне введення / База не імпортувалась";
+                }
+            }
+
             document.getElementById('farmPassportModal').classList.remove('hidden');
         }
 
