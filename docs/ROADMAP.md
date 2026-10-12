@@ -51,3 +51,37 @@
 1. **Підключення `validateHealthEventInput`** до роутера збереження лікувань у бекенді.
 2. **Перенесення `action-lists`** (Quarantine, Dry-off, Calving watch) з `functions/api/dashboard.js` у `DashboardRepository`.
 3. **Модульне розбиття `index.html`** (4 000+ рядків) на Petite-Vue шаблони.
+
+---
+
+## 🏛️ Цільова структура папок (AI-friendly & GitHub Standard)
+
+```text
+dairy-farm-portal/
+├── .github/                      # CI/CD (npm test, npm run typecheck)
+├── functions/                    # ☁️ BACKEND: Cloudflare Pages Edge Functions
+│   └── api/                      # Маршрутизація /api/*
+│       ├── [[catchall]].js       # Роутер Edge Worker
+│       ├── authGuard.js          # Перевірка JWT, RBAC-ролей
+│       ├── response.js           # Централізовані JSON хелпери
+│       ├── validation.js         # Валідація JSON схем
+│       ├── controllers/          # 🕹️ Обробники запитів (auth, farms, animals, dashboard...)
+│       ├── repositories/         # 💾 D1 SQL репозиторії (farmRepo, animalRepo, dashboardRepo...)
+│       └── models/               # 🏷️ Доменні сутності (Animal, Farm)
+├── src/                          # 💻 FRONTEND: Модульний JS (Petite-Vue / ES Modules)
+│   ├── main.js                   # Точка монтування
+│   ├── state.js                  # Глобальний реактивний стан
+│   ├── api/                      # HTTP-клієнт
+│   ├── offline/                  # 🔌 IndexedDB кеш (~900 КБ) та черга змін
+│   │   ├── db.js                 # Робота з IndexedDB
+│   │   ├── syncQueue.js          # Черга запитів (з видаленням ❌)
+│   │   └── networkStatus.js      # Відстеження мережі
+│   └── components/               # 🧩 Petite-Vue компоненти та модалки
+├── views/                        # 📄 Розбиття 4000-рядкового index.html
+│   ├── partials/                 # header, dashboard, herd-table, modals
+│   └── index.html                # Легкий контейнер (< 300 рядків)
+├── types/                        # 🛡️ TypeScript оголошення типів (.d.ts)
+├── test/                         # 🧪 Автоматизовані тести (52+ тести)
+└── docs/                         # 📚 Документація (ROADMAP.md, ARCHITECTURE.md)
+```
+
