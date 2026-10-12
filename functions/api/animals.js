@@ -7,7 +7,7 @@ export async function handleAnimals({ path, method, request, url, db, jsonRespon
     if (path === "/api/animals" && method === "GET") {
         const limit = parseInt(url.searchParams.get("limit") || "50");
         const offset = parseInt(url.searchParams.get("offset") || "0");
-        const search = url.searchParams.get("search") || "";
+        const search = url.searchParams.get("q") || url.searchParams.get("search") || "";
         const status = url.searchParams.get("status") || "ALL";
         const farmId = getActiveFarmId();
 

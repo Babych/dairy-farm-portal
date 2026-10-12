@@ -25,7 +25,7 @@ export class FarmRepository {
         const rawFarms = (await db.prepare(query).bind(...params).all()).results || [];
         return rawFarms.map((f, idx) => ({
             ...f,
-            is_current: activeFarmId ? (f.id === activeFarmId ? 1 : 0) : (idx === 0 ? 1 : 0)
+            is_current: activeFarmId ? (String(f.id) === String(activeFarmId) ? 1 : 0) : (idx === 0 ? 1 : 0)
         }));
     }
 

@@ -2286,9 +2286,12 @@
 
         // Farms Switcher & Management
         let farmsList = [];
+        let isSwitchingFarm = false;
         async function loadFarms() {
             try {
-                const res = await fetch(`${API_BASE}/api/farms`, {
+                const savedFarmId = localStorage.getItem("dairy_selected_farm");
+                const queryParam = savedFarmId ? `?active_farm_id=${encodeURIComponent(savedFarmId)}` : "";
+                const res = await fetch(`${API_BASE}/api/farms${queryParam}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (!res.ok) return;
@@ -2296,16 +2299,12 @@
                 const sel = document.getElementById('farmSelectDropdown');
                 if (!sel) return;
 
-                const savedFarmId = localStorage.getItem("dairy_selected_farm");
                 const currentFarm = (savedFarmId && farmsList.find(f => f.id === savedFarmId)) 
                     ? farmsList.find(f => f.id === savedFarmId) 
                     : (farmsList.find(f => f.is_current) || farmsList[0]);
 
-                if (currentFarm && savedFarmId && !currentFarm.is_current) {
-                    // Automatically re-activate remembered farm
+                if (currentFarm && (!savedFarmId || savedFarmId !== currentFarm.id)) {
                     localStorage.setItem("dairy_selected_farm", currentFarm.id);
-                    onFarmDropdownChange(currentFarm.id, false);
-                    return;
                 }
 
                 sel.innerHTML = farmsList.map(f => `
@@ -2317,7 +2316,8 @@
         }
 
         async function onFarmDropdownChange(farmId, showToastMsg = true) {
-            if (!farmId) return;
+            if (!farmId || isSwitchingFarm) return;
+            isSwitchingFarm = true;
             localStorage.setItem("dairy_selected_farm", farmId);
             try {
                 const res = await fetch(`${API_BASE}/api/farms/switch/${farmId}`, {
@@ -2332,12 +2332,16 @@
                     localStorage.setItem("dairy_token", token);
                 }
                 if (showToastMsg) showToast(d.message);
-                loadFarms();
+                await loadFarms();
                 loadStats();
                 loadAnimals();
                 loadActionLists();
                 loadEventGrid();
-            } catch (err) { showToast(err.message, "error"); }
+            } catch (err) { 
+                showToast(err.message, "error"); 
+            } finally {
+                isSwitchingFarm = false;
+            }
         }
 
         function openFarmPassportModal() {
