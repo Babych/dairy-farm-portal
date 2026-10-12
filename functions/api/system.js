@@ -137,6 +137,110 @@ export async function handleSystem({ path, method, request, url, env, db, jsonRe
         return jsonResponse(logs);
     }
 
+    // 4.1 GET /api/system/backup (Export complete JSON snapshot of farm & animals)
+    if (path === "/api/system/backup" && method === "GET") {
+        const auth = request.headers.get("authorization") || "";
+        let userEmail = "admin@dairy-erp.farm";
+        let activeFarmId = url.searchParams.get("farm_id") || null;
+        if (auth.startsWith("Bearer ")) {
+            try {
+                const tokenPart = auth.split(" ")[1];
+                const decoded = JSON.parse(atob(tokenPart.split(".")[1]));
+                if (decoded.sub) userEmail = decoded.sub;
+                if (!activeFarmId && decoded.farm_id) activeFarmId = decoded.farm_id;
+            } catch (e) {}
+        }
+
+        let farm = null;
+        if (activeFarmId) {
+            farm = await db.prepare("SELECT * FROM farms WHERE id = ?").bind(activeFarmId).first();
+        }
+        if (!farm) {
+            farm = await db.prepare("SELECT * FROM farms ORDER BY created_at DESC LIMIT 1").first();
+            if (farm) activeFarmId = farm.id;
+        }
+
+        let animals = [];
+        let health = [];
+        let repro = [];
+        let meds = [];
+
+        if (activeFarmId) {
+            animals = (await db.prepare("SELECT * FROM animals WHERE farm_id = ?").bind(activeFarmId).all()).results || [];
+            health = (await db.prepare(`
+                SELECT h.* FROM health_events h
+                JOIN animals a ON a.id = h.animal_id
+                WHERE a.farm_id = ?
+            `).bind(activeFarmId).all()).results || [];
+            repro = (await db.prepare(`
+                SELECT r.* FROM reproduction_events r
+                JOIN animals a ON a.id = r.animal_id
+                WHERE a.farm_id = ?
+            `).bind(activeFarmId).all()).results || [];
+        } else {
+            animals = (await db.prepare("SELECT * FROM animals LIMIT 500").all()).results || [];
+        }
+
+        try {
+            meds = (await db.prepare("SELECT * FROM medications").all()).results || [];
+        } catch (e) {
+            meds = [];
+        }
+
+        const backupPayload = {
+            version: "2.5.0",
+            export_date: new Date().toISOString(),
+            exported_by: userEmail,
+            farm_profile: {
+                name: farm?.name || "Головна молочна ферма",
+                farmer_name: farm?.farmer_name || null,
+                address: farm?.address || null,
+                city: farm?.city || null,
+                phone: farm?.phone || null,
+                farm_number: farm?.farm_number || null,
+                prefix_animal_id: farm?.prefix_animal_id || null
+            },
+            counts: {
+                animals: animals.length,
+                health_events: health.length,
+                reproduction_events: repro.length,
+                medications: meds.length
+            },
+            animals: animals.map(a => ({
+                farm_number: a.farm_number,
+                official_tag: a.official_tag,
+                name: a.name,
+                birth_date: a.birth_date,
+                gender: a.gender || 2,
+                lactation_number: a.lactation_number || 0,
+                current_status: a.current_status || "Active",
+                last_calving_date: a.last_calving_date,
+                expected_calving_date: a.expected_calving_date,
+                last_insemination_date: a.last_insemination_date,
+                days_pregnant: a.days_pregnant || 0,
+                transponder_code: a.transponder_code,
+                dam_tag: a.dam_tag,
+                sire_tag: a.sire_tag,
+                group_name: a.group_name || "Група 1"
+            })),
+            medications: meds.map(m => ({
+                name: m.name,
+                active_substance: m.active_substance,
+                batch_number: m.batch_number,
+                expiration_date: m.expiration_date,
+                stock_quantity: m.stock_quantity,
+                unit: m.unit || "дози",
+                milk_withdrawal_days: m.default_milk_withdrawal_days,
+                meat_withdrawal_days: m.default_meat_withdrawal_days
+            }))
+        };
+
+        const filenameDate = new Date().toISOString().split("T")[0];
+        return jsonResponse(backupPayload, 200, {
+            "Content-Disposition": `attachment; filename="dairy_farm_backup_${filenameDate}.json"`
+        });
+    }
+
     // 5. POST /api/import/uniform
     if (path === "/api/import/uniform" && method === "POST") {
         const auth = request.headers.get("authorization") || "";
@@ -159,59 +263,80 @@ export async function handleSystem({ path, method, request, url, env, db, jsonRe
             return jsonResponse({ detail: "Файл не передано" }, 400);
         }
 
-        // Send to Cloud Run parser microservice (configured via Cloudflare Secrets or defaults)
-        const parserUrl = env?.PARSER_SERVICE_URL || "https://dairy-farm-parser-wg7iw37zsq-ey.a.run.app/api/convert/uniform";
-        const parserSecret = env?.PARSER_SECRET_TOKEN || "dairy_secret_token_frankfurt_2026";
-
-        if (!parserUrl) {
-            return jsonResponse({
-                detail: "Служба конвертації баз не налаштована на сервері (відсутній PARSER_SERVICE_URL)."
-            }, 503);
-        }
-
         let parsed = null;
         let lastError = null;
 
-        for (let attempt = 1; attempt <= 3; attempt++) {
+        // Fast-path: Direct JSON backup import (instant, no external service required)
+        const isJsonBackup = file.name && file.name.toLowerCase().endsWith(".json");
+        if (isJsonBackup) {
             try {
-                const parserFormData = new FormData();
-                parserFormData.append("file", file);
-
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
-
-                const parseResp = await fetch(parserUrl, {
-                    method: "POST",
-                    headers: {
-                        "X-Parser-Secret": parserSecret
+                const text = await file.text();
+                const jsonPayload = JSON.parse(text);
+                const animalsList = Array.isArray(jsonPayload.animals) ? jsonPayload.animals : (Array.isArray(jsonPayload) ? jsonPayload : []);
+                parsed = {
+                    farm_info: {
+                        name: jsonPayload.farm_profile?.name || jsonPayload.farm_name || `Ферма з ${file.name.replace(/\.[^/.]+$/, "")}`,
+                        farmer_name: jsonPayload.farm_profile?.farmer_name || null
                     },
-                    body: parserFormData,
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-
-                if (parseResp.ok) {
-                    parsed = await parseResp.json();
-                    break;
-                } else {
-                    const errText = await parseResp.text();
-                    let errMsg = errText;
-                    try { errMsg = JSON.parse(errText).detail || errText; } catch(e){}
-                    lastError = `Служба парсингу відповіла статусом ${parseResp.status}: ${errMsg}`;
-                }
-            } catch (netErr) {
-                lastError = netErr.name === 'AbortError' ? 'Перевищено ліміт часу очікування обробки файлу (60с)' : netErr.message;
-            }
-
-            if (attempt < 3) {
-                await new Promise(r => setTimeout(r, 2000 * attempt));
+                    animals: animalsList
+                };
+            } catch (jsonErr) {
+                return jsonResponse({ detail: `Помилка читання JSON файлу бекапу: ${jsonErr.message}` }, 400);
             }
         }
 
         if (!parsed) {
-            return jsonResponse({
-                detail: `Не вдалося виконати автоматичну конвертацію бази: ${lastError}`
-            }, 502);
+            // Send to Cloud Run parser microservice (configured via Cloudflare Secrets or defaults)
+            const parserUrl = env?.PARSER_SERVICE_URL || "https://dairy-farm-parser-wg7iw37zsq-ey.a.run.app/api/convert/uniform";
+            const parserSecret = env?.PARSER_SECRET_TOKEN || "dairy_secret_token_frankfurt_2026";
+
+            if (!parserUrl) {
+                return jsonResponse({
+                    detail: "Служба конвертації баз не налаштована на сервері (відсутній PARSER_SERVICE_URL)."
+                }, 503);
+            }
+
+            for (let attempt = 1; attempt <= 3; attempt++) {
+                try {
+                    const parserFormData = new FormData();
+                    parserFormData.append("file", file);
+
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
+
+                    const parseResp = await fetch(parserUrl, {
+                        method: "POST",
+                        headers: {
+                            "X-Parser-Secret": parserSecret
+                        },
+                        body: parserFormData,
+                        signal: controller.signal
+                    });
+                    clearTimeout(timeoutId);
+
+                    if (parseResp.ok) {
+                        parsed = await parseResp.json();
+                        break;
+                    } else {
+                        const errText = await parseResp.text();
+                        let errMsg = errText;
+                        try { errMsg = JSON.parse(errText).detail || errText; } catch(e){}
+                        lastError = `Служба парсингу відповіла статусом ${parseResp.status}: ${errMsg}`;
+                    }
+                } catch (netErr) {
+                    lastError = netErr.name === 'AbortError' ? 'Перевищено ліміт часу очікування обробки файлу (60с)' : netErr.message;
+                }
+
+                if (attempt < 3) {
+                    await new Promise(r => setTimeout(r, 2000 * attempt));
+                }
+            }
+
+            if (!parsed) {
+                return jsonResponse({
+                    detail: `Не вдалося виконати автоматичну конвертацію бази: ${lastError}`
+                }, 502);
+            }
         }
 
         const farmName = parsed.farm_info?.name || `Ферма з ${file.name}`;

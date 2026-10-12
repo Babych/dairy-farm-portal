@@ -50,6 +50,13 @@ const endpoints = [
         validate: (data) => Array.isArray(data.events) && typeof data.total_events === 'number'
     },
     {
+        name: "System Backup Generation API",
+        path: "/api/system/backup",
+        expectedStatus: 200,
+        expectedContentType: "application/json",
+        validate: (data) => data.version === '2.5.0' && typeof data.counts === 'object' && Array.isArray(data.animals)
+    },
+    {
         name: "Cloud Run Parser Auth Integration",
         path: "/api/parser-auth-check",
         customCheck: async () => {

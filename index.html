@@ -1305,9 +1305,9 @@
             <div class="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center hover:border-emerald-500 transition cursor-pointer bg-slate-50"
                  onclick="document.getElementById('fdbFileInput').click()">
                 <i class="fa-solid fa-cloud-arrow-up text-3xl text-emerald-600 mb-2"></i>
-                <p class="text-xs font-semibold text-slate-800" id="fileChooseLabel">Клікніть для вибору .FDB або .ZIP</p>
-                <p class="text-[11px] text-slate-400 mt-1" id="importPlatformNotice">Автоматична розпаковка та нативна обробка Firebird</p>
-                <input id="fdbFileInput" type="file" accept=".fdb,.zip" class="hidden" onchange="onFileSelected(this)">
+                <p class="text-xs font-semibold text-slate-800" id="fileChooseLabel">Клікніть для вибору .FDB, .ZIP або .JSON</p>
+                <p class="text-[11px] text-slate-400 mt-1" id="importPlatformNotice">Автоматична конвертація Firebird або відновлення JSON бекапу</p>
+                <input id="fdbFileInput" type="file" accept=".fdb,.zip,.json" class="hidden" onchange="onFileSelected(this)">
             </div>
 
             <!-- In-Modal Error Alert (Visible inside modal, not blurred out) -->
