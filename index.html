@@ -44,6 +44,64 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
+
+        @media print {
+            body * {
+                visibility: hidden !important;
+            }
+            #vetChecklistModal, #vetChecklistModal * {
+                visibility: visible !important;
+            }
+            #vetChecklistModal {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                height: auto !important;
+                min-height: 100% !important;
+                background: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                z-index: 99999 !important;
+                overflow: visible !important;
+            }
+            #vetChecklistModal > div {
+                max-width: 100% !important;
+                max-height: none !important;
+                box-shadow: none !important;
+                border: none !important;
+                overflow: visible !important;
+            }
+            #vetChecklistModal button,
+            #vetChecklistModal .border-t,
+            #vetChecklistModal .fa-xmark {
+                display: none !important;
+            }
+            #vetChecklistModal .overflow-y-auto {
+                overflow: visible !important;
+                height: auto !important;
+                padding: 0 !important;
+            }
+            #vetChecklistModal .p-6 {
+                padding: 8px !important;
+            }
+            #vetChecklistModal .space-y-6 > * + * {
+                margin-top: 10px !important;
+            }
+            #vetChecklistModal table {
+                font-size: 10px !important;
+                border-collapse: collapse !important;
+                width: 100% !important;
+            }
+            #vetChecklistModal th, #vetChecklistModal td {
+                padding: 3px 6px !important;
+                border-bottom: 1px solid #cbd5e1 !important;
+            }
+            @page {
+                size: A4 portrait;
+                margin: 10mm;
+            }
+        }
     </style>
 <body id="petiteAppRoot" v-scope class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans selection:bg-emerald-500 selection:text-white antialiased">
 
@@ -250,7 +308,7 @@
 
             <!-- 2-й поверх: Всі розділи системи (Flex Wrap у поверхи без скролу) -->
             <div class="flex flex-wrap items-center gap-2 pt-0.5">
-                <button onclick="switchTab('animals')" class="nav-tab-btn active bg-emerald-600 text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
+                <button id="navTabAnimalsBtn" onclick="switchTab('animals')" class="nav-tab-btn active bg-emerald-600 text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
                     <i class="fa-solid fa-list-check"></i> <span data-i18n="navAnimals">Поголів'я корів</span>
                 </button>
                 <button onclick="switchTab('grid')" class="nav-tab-btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
@@ -2186,8 +2244,11 @@
 
             if (tabId === 'animals') {
                 document.getElementById('tabContentAnimals').classList.remove('hidden');
-                event?.currentTarget?.classList.add('bg-emerald-600', 'text-white', 'shadow-sm');
-                event?.currentTarget?.classList.remove('bg-slate-100', 'text-slate-700');
+                const btn = document.getElementById('navTabAnimalsBtn') || event?.currentTarget;
+                if (btn) {
+                    btn.classList.add('bg-emerald-600', 'text-white', 'shadow-sm');
+                    btn.classList.remove('bg-slate-100', 'text-slate-700');
+                }
             } else if (tabId === 'actions') {
                 document.getElementById('tabContentActions').classList.remove('hidden');
                 event?.currentTarget?.classList.add('bg-emerald-600', 'text-white', 'shadow-sm');
@@ -2848,8 +2909,8 @@
                                 ${a.current_status}
                             </span>
                         </td>
-                        <td class="p-3 text-slate-500">${a.last_calving_date}</td>
-                        <td class="p-3 text-slate-500">${a.expected_calving_date}</td>
+                        <td class="p-3 text-slate-500">${a.last_calving_date || '-'}</td>
+                        <td class="p-3 text-slate-500">${a.expected_calving_date || '-'}</td>
                         <td class="p-3 text-slate-500">${a.group_name || 'Група 1'}</td>
                         <td class="p-3 text-right">
                             <button onclick="openCow360('${a.id}')" class="bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 px-2.5 py-1.5 rounded-lg font-semibold transition">
@@ -2858,8 +2919,12 @@
                         </td>
                     </tr>
                 `).join('');
+                const fromNum = data.total > 0 ? (curOffset + 1) : 0;
+                const toNum = Math.min(curOffset + data.items.length, data.total);
+                const currentPage = Math.floor(curOffset / PAGE_LIMIT) + 1;
+                const totalPages = Math.max(1, Math.ceil(data.total / PAGE_LIMIT));
 
-                document.getElementById('animalsCountLabel').textContent = `Показано ${data.items.length} із ${data.total}`;
+                document.getElementById('animalsCountLabel').textContent = `Сторінка ${currentPage} з ${totalPages} • Показано ${fromNum}-${toNum} із ${data.total}`;
                 document.getElementById('prevPageBtn').disabled = curOffset === 0;
                 document.getElementById('nextPageBtn').disabled = curOffset + PAGE_LIMIT >= data.total;
 
@@ -3654,8 +3719,8 @@
                             </td>
                             <td class="p-3">${expiryBadge}</td>
                             <td class="p-3 font-bold text-slate-800">${m.stock_quantity} ${m.unit}</td>
-                            <td class="p-3 text-rose-600 font-bold">${m.milk_days > 0 ? m.milk_days + ' дн.' : '0 дн. (вільно)'}</td>
-                            <td class="p-3 text-slate-600 font-medium">${m.meat_days} дн.</td>
+                            <td class="p-3 text-rose-600 font-bold">${(m.milk_days != null && !isNaN(m.milk_days)) ? (m.milk_days > 0 ? m.milk_days + ' дн.' : '0 дн. (вільно)') : 'Не вказано'}</td>
+                            <td class="p-3 text-slate-600 font-medium">${(m.meat_days != null && !isNaN(m.meat_days)) ? (m.meat_days > 0 ? m.meat_days + ' дн.' : '0 дн. (вільно)') : 'Не вказано'}</td>
                             <td class="p-3 text-right">
                                 <button onclick="deleteMedication('${m.id}')" class="text-rose-500 hover:text-rose-700 px-2 py-1"><i class="fa-regular fa-trash-can"></i></button>
                             </td>

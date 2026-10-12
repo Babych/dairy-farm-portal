@@ -19,6 +19,16 @@ export async function handleFarms({ path, method, request, url, env, db, jsonRes
             } catch (e) {}
         }
 
+        if (userEmail) {
+            try {
+                const dbUser = await db.prepare("SELECT role, farm_id FROM users WHERE email = ?").bind(userEmail).first();
+                if (dbUser) {
+                    userRole = dbUser.role || userRole;
+                    if (!activeFarmId) activeFarmId = dbUser.farm_id;
+                }
+            } catch (e) {}
+        }
+
         const farms = await FarmRepository.listFarms(db, {
             userEmail,
             userRole,
@@ -37,13 +47,20 @@ export async function handleFarms({ path, method, request, url, env, db, jsonRes
 
         const auth = request.headers.get("authorization") || "";
         let userEmail = "demo.farmer@dairy-erp.farm";
-        let userRole = "superadmin";
+        let userRole = "farmer";
         if (auth.startsWith("Bearer ")) {
             try {
                 const tokenPart = auth.split(" ")[1];
                 const decoded = JSON.parse(atob(tokenPart.split(".")[1]));
                 userEmail = decoded.sub || userEmail;
                 userRole = decoded.role || userRole;
+            } catch (e) {}
+        }
+
+        if (userEmail) {
+            try {
+                const dbUser = await db.prepare("SELECT role FROM users WHERE email = ?").bind(userEmail).first();
+                if (dbUser?.role) userRole = dbUser.role;
             } catch (e) {}
         }
 
