@@ -1,0 +1,129 @@
+// Centralized API Client with Offline Outbox & JWT Bearer injection
+import { store } from '../state/store.js';
+
+export async function apiRequest(endpoint, options = {}) {
+    const url = endpoint.startsWith('http') ? endpoint : `${store.apiBase}${endpoint}`;
+    const headers = {
+        'Content-Type': 'application/json',
+        ...(options.headers || {})
+    };
+
+    if (store.token) {
+        headers['Authorization'] = `Bearer ${store.token}`;
+    }
+
+    try {
+        const res = await fetch(url, {
+            ...options,
+            headers
+        });
+
+        const data = await res.json().catch(() => null);
+
+        if (!res.ok) {
+            const errorMsg = data?.detail || data?.error || `Помилка сервера (${res.status})`;
+            throw new Error(errorMsg);
+        }
+
+        return data;
+    } catch (err) {
+        // If network offline and mutation request, queue in offline outbox
+        if (!navigator.onLine && options.method && options.method !== 'GET') {
+            await queueOfflineMutation(endpoint, options.method, options.body ? JSON.parse(options.body) : null);
+            store.addToast("Збережено офлайн. Синхронізація відбудеться при відновленні зв'язку.", "info");
+            return { offline_queued: true };
+        }
+        throw err;
+    }
+}
+
+// IndexedDB Offline Outbox Queue
+const DB_NAME = "DairyErpOfflineDB";
+const STORE_NAME = "mutations_outbox";
+
+function openOutboxDB() {
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
+            }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+}
+
+export async function queueOfflineMutation(endpoint, method, payload) {
+    try {
+        const db = await openOutboxDB();
+        const tx = db.transaction(STORE_NAME, "readwrite");
+        const storeObj = tx.objectStore(STORE_NAME);
+        storeObj.add({
+            endpoint,
+            method,
+            payload,
+            timestamp: Date.now()
+        });
+        updateOutboxCount();
+    } catch (e) {
+        console.warn("Failed to queue offline mutation", e);
+    }
+}
+
+export async function updateOutboxCount() {
+    try {
+        const db = await openOutboxDB();
+        const tx = db.transaction(STORE_NAME, "readonly");
+        const storeObj = tx.objectStore(STORE_NAME);
+        const countReq = storeObj.count();
+        countReq.onsuccess = () => {
+            store.outboxCount = countReq.result;
+        };
+    } catch (e) {
+        store.outboxCount = 0;
+    }
+}
+
+export async function flushOfflineOutbox() {
+    if (!navigator.onLine) return;
+    try {
+        const db = await openOutboxDB();
+        const tx = db.transaction(STORE_NAME, "readwrite");
+        const storeObj = tx.objectStore(STORE_NAME);
+        const getAllReq = storeObj.getAll();
+
+        getAllReq.onsuccess = async () => {
+            const items = getAllReq.result || [];
+            if (items.length === 0) return;
+
+            for (const item of items) {
+                try {
+                    await apiRequest(item.endpoint, {
+                        method: item.method,
+                        body: item.payload ? JSON.stringify(item.payload) : undefined
+                    });
+                    // Delete item on success
+                    const delTx = db.transaction(STORE_NAME, "readwrite");
+                    delTx.objectStore(STORE_NAME).delete(item.id);
+                } catch (err) {
+                    console.error("Failed to sync offline mutation item", item, err);
+                }
+            }
+            updateOutboxCount();
+            store.addToast(`Синхронізовано офлайн-записи (${items.length})`, "success");
+        };
+    } catch (e) {
+        console.warn("Outbox flush failed", e);
+    }
+}
+
+window.addEventListener('online', () => {
+    store.isOnline = true;
+    flushOfflineOutbox();
+});
+
+window.addEventListener('offline', () => {
+    store.isOnline = false;
+});

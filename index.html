@@ -45,8 +45,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
     </style>
-</head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans selection:bg-emerald-500 selection:text-white antialiased">
+<body id="petiteAppRoot" v-scope class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans selection:bg-emerald-500 selection:text-white antialiased">
 
     <!-- Header -->
     <header class="border-b border-slate-200 bg-white/95 sticky top-0 z-50 px-3.5 sm:px-6 py-2.5 sm:py-3.5 flex justify-between items-center shadow-sm backdrop-blur-md">
@@ -94,7 +93,19 @@
     </header>
 
     <!-- NOTIFICATION TOAST -->
-    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none">
+        <div v-for="t in store.toasts" :key="t.id"
+             :class="t.type === 'error' ? 'bg-rose-600 border border-rose-400/40 shadow-2xl' : 'bg-emerald-600 shadow-lg'"
+             class="text-white text-xs px-4 py-3 rounded-xl flex items-start justify-between gap-3 transform transition-all duration-300 ease-out pointer-events-auto max-w-md">
+            <div class="flex items-start gap-2.5">
+                <i :class="t.type === 'error' ? 'fa-solid fa-circle-exclamation text-rose-200 mt-0.5' : 'fa-solid fa-check text-white mt-0.5'"></i>
+                <span class="leading-relaxed select-text">{{ t.message }}</span>
+            </div>
+            <button v-if="t.type === 'error'" @click="store.removeToast(t.id)" type="button" class="text-rose-200 hover:text-white transition ml-2 p-0.5 focus:outline-none" title="Закрити">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+        </div>
+    </div>
 
     <!-- 0. FIRST-RUN ONBOARDING SETUP (Rendered if 0 users in DB) -->
     <div id="onboardingScreen" class="hidden flex-1 flex items-center justify-center p-6">
@@ -1764,6 +1775,20 @@
         </div>
     </div>
 
+    <!-- PETITE-VUE & MODULAR REACTIVE CORE -->
+    <script type="module">
+        import { initApp } from './src/main.js';
+        import { store } from './src/state/store.js';
+        import { herdModule } from './src/modules/herd.js';
+        import { farmsModule } from './src/modules/farms.js';
+        import { dashboardModule } from './src/modules/dashboard.js';
+
+        // Initialize Petite-Vue Reactive Tree
+        document.addEventListener('DOMContentLoaded', () => {
+            initApp();
+        });
+    </script>
+
     <!-- MAIN JAVASCRIPT LOGIC -->
     <script>
         // API Base Resolver (Direct Same-Origin for Cloudflare Functions & D1)
@@ -1798,7 +1823,12 @@
 
 
         function showToast(msg, type = 'success') {
+            if (window.store && typeof window.store.addToast === 'function') {
+                window.store.addToast(msg, type);
+                return;
+            }
             const container = document.getElementById('toastContainer');
+            if (!container) return;
             const el = document.createElement('div');
             const bg = type === 'success' ? 'bg-emerald-600' : 'bg-rose-600';
             let displayMsg = msg;
@@ -1807,7 +1837,6 @@
             }
             
             if (type === 'error') {
-                // Persistent error toast with close button
                 el.className = `${bg} text-white text-xs px-4 py-3 rounded-xl shadow-2xl flex items-start justify-between gap-3 transform transition-all duration-300 ease-out pointer-events-auto max-w-md border border-rose-400/40`;
                 el.innerHTML = `
                     <div class="flex items-start gap-2.5">
@@ -1824,7 +1853,6 @@
                 };
                 container.appendChild(el);
             } else {
-                // Success / info toast with auto-dismiss after 4 seconds
                 el.className = `${bg} text-white text-xs px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 transform transition-all duration-300 ease-out pointer-events-auto`;
                 el.innerHTML = `<i class="fa-solid fa-check"></i> <span>${displayMsg}</span>`;
                 container.appendChild(el);

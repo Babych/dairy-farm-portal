@@ -1,0 +1,73 @@
+// Central Reactive State Store for DairyERP Portal
+import { reactive } from '../../lib/petite-vue.es.js';
+
+export function getApiBase() {
+    const saved = localStorage.getItem("dairy_api_base");
+    if (saved) return saved;
+    return window.location.origin;
+}
+
+export const store = reactive({
+    apiBase: getApiBase(),
+    token: localStorage.getItem("dairy_token") || null,
+    currentUser: null,
+    currentFarmId: localStorage.getItem("dairy_selected_farm") || null,
+    farmsList: [],
+    currentCowId: null,
+    
+    // UI Navigation State
+    currentTab: 'herd', // 'herd', 'actions', 'events', 'admin'
+    activeSubFilter: 'Active', // for stats filter
+    isLoading: false,
+    isOnline: navigator.onLine,
+    outboxCount: 0,
+
+    // Toasts
+    toasts: [],
+
+    // Helpers
+    setToken(newToken) {
+        this.token = newToken;
+        if (newToken && newToken !== "demo_mode_token") {
+            localStorage.setItem("dairy_token", newToken);
+        } else if (!newToken) {
+            localStorage.removeItem("dairy_token");
+        }
+    },
+
+    setCurrentUser(user) {
+        this.currentUser = user;
+        if (user && user.role !== "guest") {
+            localStorage.setItem("dairy_user", JSON.stringify(user));
+        } else if (!user) {
+            localStorage.removeItem("dairy_user");
+        }
+    },
+
+    setSelectedFarm(farmId) {
+        this.currentFarmId = farmId;
+        if (farmId) {
+            localStorage.setItem("dairy_selected_farm", farmId);
+        }
+    },
+
+    addToast(msg, type = 'success') {
+        let displayMsg = msg;
+        if (typeof msg === 'string' && (msg.includes("exceeded D1's free tier daily row read limit") || msg.includes("D1_ERROR"))) {
+            displayMsg = "⚠️ Хмарна база тимчасово перевищила безкоштовний добовий ліміт запитів Cloudflare D1. Режим читання відновиться опівночі UTC або після переходу на платний план. Ви можете продовжувати роботу в демо-режимі!";
+        }
+        const id = Date.now() + Math.random().toString(36).substring(2, 6);
+        const toast = { id, message: displayMsg, type };
+        this.toasts.push(toast);
+
+        if (type !== 'error') {
+            setTimeout(() => {
+                this.removeToast(id);
+            }, 4000);
+        }
+    },
+
+    removeToast(id) {
+        this.toasts = this.toasts.filter(t => t.id !== id);
+    }
+});

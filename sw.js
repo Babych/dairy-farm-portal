@@ -1,12 +1,19 @@
 // DairyERP Service Worker (PWA Offline & Instant Cache)
 // Auto-incremented build token:
-const CACHE_VERSION = 'dairy-erp-v4b8655f-mv4uzqgf';
+const CACHE_VERSION = 'dairy-erp-vbce4f31-mv4vktnf';
 
 const PRECACHE_ASSETS = [
   '/',
   '/manifest.json',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
+  '/lib/petite-vue.es.js',
+  '/src/main.js',
+  '/src/state/store.js',
+  '/src/api/client.js',
+  '/src/modules/farms.js',
+  '/src/modules/herd.js',
+  '/src/modules/dashboard.js',
   'https://cdn.tailwindcss.com',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css',
   'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'
