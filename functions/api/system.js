@@ -1,6 +1,7 @@
 // Feature Module: System Diagnostics, Admin Metrics, Logs & Uniform Import Forwarding
 // Flat 1-level collocation for AI vibe-coding
 import { requireAuth, getCallerUser } from './authGuard.js';
+import { getGoogleIdToken } from './gcpAuth.js';
 
 export async function handleSystem({ path, method, request, url, env, db, jsonResponse }) {
     // 1. GET /api/system/status
@@ -302,6 +303,10 @@ export async function handleSystem({ path, method, request, url, env, db, jsonRe
                 }, 503);
             }
 
+            // Zero-Trust: If service account key is configured, generate Google IAM Identity Token for private Cloud Run
+            const audience = parserUrl.startsWith("http") ? new URL(parserUrl).origin : parserUrl;
+            const googleIdToken = await getGoogleIdToken(audience, env?.GCP_SERVICE_ACCOUNT_KEY);
+
             for (let attempt = 1; attempt <= 3; attempt++) {
                 try {
                     const parserFormData = new FormData();
@@ -310,11 +315,16 @@ export async function handleSystem({ path, method, request, url, env, db, jsonRe
                     const controller = new AbortController();
                     const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
 
+                    const headers = {
+                        "X-Parser-Secret": parserSecret
+                    };
+                    if (googleIdToken) {
+                        headers["Authorization"] = `Bearer ${googleIdToken}`;
+                    }
+
                     const parseResp = await fetch(parserUrl, {
                         method: "POST",
-                        headers: {
-                            "X-Parser-Secret": parserSecret
-                        },
+                        headers: headers,
                         body: parserFormData,
                         signal: controller.signal
                     });
