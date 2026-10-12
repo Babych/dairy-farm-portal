@@ -1,6 +1,7 @@
 // Feature Module: Farms Management & Switching
-// Flat 1-level collocation for AI vibe-coding
+// Uses Repository Layer (FarmRepository) for persistence decoupling
 import { signJWT } from './crypto.js';
+import { FarmRepository } from './repositories/farmRepo.js';
 
 export async function handleFarms({ path, method, request, url, env, db, jsonResponse }) {
     // 1. GET /api/farms
@@ -19,35 +20,18 @@ export async function handleFarms({ path, method, request, url, env, db, jsonRes
             } catch (e) {}
         }
 
-        let query = `
-            SELECT f.id, f.code, f.name, f.farmer_name, f.address, f.city, f.phone, f.owner_email,
-                   count(a.id) as cow_count, 0 as is_current, f.created_at
-            FROM farms f
-            LEFT JOIN animals a ON a.farm_id = f.id
-        `;
-        const params = [];
-        if (userRole === "superadmin") {
-            // superadmin sees all farms
-        } else if (userEmail) {
-            query += " WHERE f.owner_email = ?";
-            params.push(userEmail);
-        } else {
-            query += " WHERE f.owner_email IS NULL";
-        }
-        query += " GROUP BY f.id ORDER BY f.created_at ASC";
-
-        const rawFarms = (await db.prepare(query).bind(...params).all()).results;
-        const farms = rawFarms.map((f, idx) => ({
-            ...f,
-            is_current: activeFarmId ? (f.id === activeFarmId ? 1 : 0) : (idx === 0 ? 1 : 0)
-        }));
+        const farms = await FarmRepository.listFarms(db, {
+            userEmail,
+            userRole,
+            activeFarmId
+        });
         return jsonResponse(farms);
     }
 
     // 2. POST /api/farms/switch/:id (Switch active farm context)
     if (path.startsWith("/api/farms/switch/") && method === "POST") {
         const farmId = path.split("/")[4];
-        const farm = await db.prepare("SELECT * FROM farms WHERE id = ?").bind(farmId).first();
+        const farm = await FarmRepository.getById(db, farmId);
         if (!farm) {
             return jsonResponse({ detail: "Ферму не знайдено" }, 404);
         }
@@ -85,21 +69,19 @@ export async function handleFarms({ path, method, request, url, env, db, jsonRes
     // 3. POST /api/farms (Create New Farm)
     if (path === "/api/farms" && method === "POST") {
         const body = await request.json();
-        const farmId = body.id || crypto.randomUUID();
-        const farmCode = body.code || `FARM_${Date.now().toString(36).toUpperCase()}`;
-        const farmName = body.name || "Нова приватна ферма";
-        const ownerEmail = body.owner_email || null;
-
-        await db.prepare(`
-            INSERT INTO farms (id, code, name, farmer_name, owner_email, created_at)
-            VALUES (?, ?, ?, ?, ?, datetime('now'))
-        `).bind(farmId, farmCode, farmName, body.farmer_name || null, ownerEmail).run();
+        const newFarm = await FarmRepository.create(db, {
+            id: body.id,
+            code: body.code,
+            name: body.name,
+            farmerName: body.farmer_name,
+            ownerEmail: body.owner_email
+        });
 
         return jsonResponse({
             status: "success",
-            message: `Ферму '${farmName}' успішно створено`,
-            farm_id: farmId,
-            farm: { id: farmId, code: farmCode, name: farmName, owner_email: ownerEmail }
+            message: `Ферму '${newFarm.name}' успішно створено`,
+            farm_id: newFarm.id,
+            farm: newFarm
         }, 201);
     }
 
@@ -117,16 +99,18 @@ export async function handleFarms({ path, method, request, url, env, db, jsonRes
             return jsonResponse({ detail: "Назва ферми не може бути порожньою" }, 400);
         }
 
-        await db.prepare(`
-            UPDATE farms 
-            SET name = ?, farmer_name = ?, city = ?, address = ?, phone = ?
-            WHERE id = ?
-        `).bind(farmName, farmerName || null, city || null, address || null, phone || null, farmId).run();
+        const updated = await FarmRepository.updatePassport(db, farmId, {
+            name: farmName,
+            farmerName,
+            city,
+            address,
+            phone
+        });
 
         return jsonResponse({
             status: "success",
             message: `Паспорт ферми '${farmName}' успішно оновлено!`,
-            farm: { id: farmId, name: farmName, farmer_name: farmerName, city, address, phone }
+            farm: updated
         });
     }
 
@@ -134,73 +118,92 @@ export async function handleFarms({ path, method, request, url, env, db, jsonRes
     if (path.startsWith("/api/farms/") && method === "DELETE") {
         const farmId = path.split("/")[3];
 
-        const targetFarm = await db.prepare("SELECT * FROM farms WHERE id = ?").bind(farmId).first();
+        const targetFarm = await FarmRepository.getById(db, farmId);
         if (!targetFarm) {
             return jsonResponse({ detail: "Ферму не знайдено" }, 404);
         }
 
         try {
-            // Unlink users referencing this farm
-            await db.prepare("UPDATE users SET farm_id = NULL WHERE farm_id = ?").bind(farmId).run();
+            await FarmRepository.deleteCascade(db, farmId);
 
-            // Cascade delete events & animals
-            await db.prepare("DELETE FROM reproduction_events WHERE animal_id IN (SELECT id FROM animals WHERE farm_id = ?)").bind(farmId).run();
-            await db.prepare("DELETE FROM health_events WHERE animal_id IN (SELECT id FROM animals WHERE farm_id = ?)").bind(farmId).run();
-            await db.prepare("DELETE FROM animals WHERE farm_id = ?").bind(farmId).run();
-            await db.prepare("DELETE FROM audit_logs WHERE farm_id = ?").bind(farmId).run();
-
-            // Delete farm record
-            await db.prepare("DELETE FROM farms WHERE id = ?").bind(farmId).run();
-
-            const remainingFarms = (await db.prepare("SELECT * FROM farms ORDER BY created_at DESC").all()).results;
-            let nextFarm = remainingFarms[0] || null;
-
-            if (!nextFarm) {
-                const newFarmId = crypto.randomUUID();
-                const newFarmCode = `FARM_${Date.now().toString(36).toUpperCase()}`;
-                const newFarmName = "Нова ферма";
-                await db.prepare(`
-                    INSERT INTO farms (id, code, name, created_at)
-                    VALUES (?, ?, ?, datetime('now'))
-                `).bind(newFarmId, newFarmCode, newFarmName).run();
-                nextFarm = { id: newFarmId, code: newFarmCode, name: newFarmName, cow_count: 0 };
-            }
-
-            await db.prepare("UPDATE users SET farm_id = ? WHERE farm_id IS NULL").bind(nextFarm.id).run();
-
-            const jwtSecret = env?.JWT_SECRET_KEY || "ephemeral_local_dev_token_key_change_in_prod";
-            const updatedPayload = {
-                sub: "user",
-                farm_id: nextFarm.id,
-                exp: Math.floor(Date.now() / 1000) + (30 * 24 * 3600)
-            };
-            const newToken = await signJWT(updatedPayload, jwtSecret);
-
-            try {
-                const auditId = crypto.randomUUID();
-                await db.prepare(`
-                    INSERT INTO audit_logs (id, farm_id, entity_type, entity_id, action, summary, user_email, created_at)
-                    VALUES (?, ?, 'FARM', ?, 'DELETE', ?, 'admin', datetime('now'))
-                `).bind(auditId, nextFarm.id, farmId, `Видалено базу ферми: ${targetFarm.name}`).run();
-            } catch (e) {}
+            // Audit log
+            await db.prepare(`
+                INSERT INTO audit_logs (id, entity_type, entity_id, action, summary, created_at)
+                VALUES (?, 'FARM', ?, 'DELETE', ?, datetime('now'))
+            `).bind(crypto.randomUUID(), farmId, `Видалено ферму '${targetFarm.name}'`).run();
 
             return jsonResponse({
                 status: "success",
-                message: `Базу ферми '${targetFarm.name}' успішно видалено`,
-                next_farm_id: nextFarm.id,
-                access_token: newToken
+                message: `Ферму '${targetFarm.name}' та всі пов'язані дані видалено.`
             });
-        } catch (err) {
-            try {
-                const errLogId = crypto.randomUUID();
-                await db.prepare(`
-                    INSERT INTO system_logs (id, farm_id, level, category, message, details, created_at)
-                    VALUES (?, ?, 'ERROR', 'DATABASE', ?, ?, datetime('now'))
-                `).bind(errLogId, farmId, `Помилка видалення бази ферми: ${err.message}`, err.stack || err.toString()).run();
-            } catch (logErr) {}
-            return jsonResponse({ detail: `Помилка видалення бази з БД: ${err.message}` }, 500);
+        } catch (e) {
+            return jsonResponse({ detail: `Помилка видалення ферми: ${e.message}` }, 500);
         }
     }
 
-    return null; // Not handled by this feature module
+    // 6. POST /api/farms/clone-demo
+    if (path === "/api/farms/clone-demo" && method === "POST") {
+        const auth = request.headers.get("authorization") || "";
+        let userEmail = null;
+        if (auth.startsWith("Bearer ")) {
+            try {
+                const tokenPart = auth.split(" ")[1];
+                const decoded = JSON.parse(atob(tokenPart.split(".")[1]));
+                userEmail = decoded.sub || null;
+            } catch (e) {}
+        }
+        if (!userEmail) {
+            return jsonResponse({ detail: "Необхідна авторизація" }, 401);
+        }
+
+        const demoFarm = await db.prepare("SELECT * FROM farms WHERE owner_email IS NULL ORDER BY created_at ASC LIMIT 1").first();
+        if (!demoFarm) {
+            return jsonResponse({ detail: "Демо-ферму не знайдено для клонування" }, 404);
+        }
+
+        const newFarmId = crypto.randomUUID();
+        const newFarmCode = `FARM_${Date.now().toString(36).toUpperCase()}`;
+        const newFarmName = `${demoFarm.name} (Копія)`;
+
+        await db.prepare(`
+            INSERT INTO farms (id, code, name, farmer_name, address, city, phone, owner_email, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        `).bind(
+            newFarmId,
+            newFarmCode,
+            newFarmName,
+            demoFarm.farmer_name,
+            demoFarm.address,
+            demoFarm.city,
+            demoFarm.phone,
+            userEmail
+        ).run();
+
+        const demoAnimals = (await db.prepare("SELECT * FROM animals WHERE farm_id = ?").bind(demoFarm.id).all()).results || [];
+        const animalIdMap = {};
+
+        for (const a of demoAnimals) {
+            const newAnimalId = crypto.randomUUID();
+            animalIdMap[a.id] = newAnimalId;
+            await db.prepare(`
+                INSERT INTO animals (
+                    id, farm_id, farm_number, official_tag, name, birth_date,
+                    lactation_number, current_status, last_calving_date, expected_calving_date,
+                    transponder_code, dam_tag, sire_tag, group_name, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+            `).bind(
+                newAnimalId, newFarmId, a.farm_number, a.official_tag, a.name, a.birth_date,
+                a.lactation_number, a.current_status, a.last_calving_date, a.expected_calving_date,
+                a.transponder_code, a.dam_tag, a.sire_tag, a.group_name
+            ).run();
+        }
+
+        return jsonResponse({
+            status: "success",
+            message: `Створено приватну ферму '${newFarmName}' з ${demoAnimals.length} тваринами!`,
+            farm_id: newFarmId
+        }, 201);
+    }
+
+    return null;
 }
