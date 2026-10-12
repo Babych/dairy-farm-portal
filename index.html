@@ -295,7 +295,7 @@
     </div>
 
     <!-- 1. LOGIN SCREEN -->
-    <div id="loginScreen" class="flex-1 flex items-center justify-center p-6">
+    <div id="loginScreen" class="hidden flex-1 flex items-center justify-center p-6">
         <div class="bg-white border border-slate-200 rounded-3xl p-8 max-w-md w-full shadow-xl space-y-6 text-center">
             <div class="space-y-2">
                 <div class="w-14 h-14 mx-auto rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-2xl font-bold shadow-sm">
@@ -647,8 +647,15 @@
                     </div>
                 </div>
 
-                <!-- Таблиця корів -->
-                <div class="overflow-x-auto rounded-xl border border-slate-200">
+                <!-- Таблиця корів з фіксованою мінімальною висотою проти стрибків контенту (Zero Layout Shift) -->
+                <div class="relative overflow-x-auto rounded-xl border border-slate-200 min-h-[460px] bg-white">
+                    <!-- Напівпрозорий м'який індикатор оновлення без випадання списку -->
+                    <div v-if="herd.isLoading" class="absolute inset-0 bg-white/70 backdrop-blur-[1px] flex items-center justify-center z-10 transition-opacity">
+                        <div class="bg-white border border-slate-200 shadow-lg px-4 py-2 rounded-xl flex items-center gap-2 text-xs font-semibold text-slate-700">
+                            <i class="fa-solid fa-spinner fa-spin text-emerald-600"></i>
+                            <span data-i18n="loadingAnimals">Оновлення сторінки...</span>
+                        </div>
+                    </div>
                     <table class="w-full text-left border-collapse text-xs">
                         <thead>
                             <tr class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
@@ -664,12 +671,7 @@
                             </tr>
                         </thead>
                         <tbody id="animalsTableBody" class="divide-y divide-slate-100 text-slate-700">
-                            <tr v-if="herd.isLoading">
-                                <td colspan="9" class="p-8 text-center text-slate-400">
-                                    <i class="fa-solid fa-spinner fa-spin mr-1"></i> <span data-i18n="loadingAnimals">Завантаження бази...</span>
-                                </td>
-                            </tr>
-                            <tr v-else-if="!herd.animals || herd.animals.length === 0">
+                            <tr v-if="!herd.isLoading && (!herd.animals || herd.animals.length === 0)">
                                 <td colspan="9" class="p-8 text-center text-slate-400">Корів не знайдено</td>
                             </tr>
                             <tr v-for="a in herd.animals" :key="a.id" class="hover:bg-slate-50 transition border-b border-slate-100">

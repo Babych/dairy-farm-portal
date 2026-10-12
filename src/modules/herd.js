@@ -88,26 +88,34 @@ export const herdModule = {
         return pages;
     },
 
+    preservePaginationScroll() {
+        const controls = document.getElementById('paginationControlsContainer');
+        if (controls) {
+            // Smoothly keep the pagination buttons in view rather than jumping to page top
+            controls.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+        }
+    },
+
     goToPage(p) {
         if (p === '...' || p === this.currentPage) return;
         const targetPage = Number(p);
         if (targetPage >= 1 && targetPage <= this.totalPages) {
             this.curOffset = (targetPage - 1) * this.pageLimit;
-            this.loadAnimals();
+            this.loadAnimals().then(() => this.preservePaginationScroll());
         }
     },
 
     prevPage() {
         if (this.curOffset >= this.pageLimit) {
             this.curOffset -= this.pageLimit;
-            this.loadAnimals();
+            this.loadAnimals().then(() => this.preservePaginationScroll());
         }
     },
 
     nextPage() {
         if (this.curOffset + this.pageLimit < this.totalCount) {
             this.curOffset += this.pageLimit;
-            this.loadAnimals();
+            this.loadAnimals().then(() => this.preservePaginationScroll());
         }
     },
 
