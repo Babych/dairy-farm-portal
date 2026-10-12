@@ -161,7 +161,7 @@ export async function handleSystem({ path, method, request, url, env, db, jsonRe
 
         // Send to Cloud Run parser microservice (configured via Cloudflare Secrets or defaults)
         const parserUrl = env?.PARSER_SERVICE_URL || "https://dairy-farm-parser-wg7iw37zsq-ey.a.run.app/api/convert/uniform";
-        const parserSecret = env?.PARSER_SECRET_TOKEN || "dairy_parser_cloud_run_secret_2026";
+        const parserSecret = env?.PARSER_SECRET_TOKEN || "dairy_secret_token_frankfurt_2026";
 
         if (!parserUrl) {
             return jsonResponse({
