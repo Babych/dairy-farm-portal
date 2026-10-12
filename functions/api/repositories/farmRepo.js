@@ -1,4 +1,5 @@
 // Repository: Farms Persistence & Data Queries (Cloudflare D1)
+import { Farm } from '../models/Farm.js';
 
 export class FarmRepository {
     /**
@@ -23,24 +24,26 @@ export class FarmRepository {
         query += " GROUP BY f.id ORDER BY f.created_at ASC";
 
         const rawFarms = (await db.prepare(query).bind(...params).all()).results || [];
-        return rawFarms.map((f, idx) => ({
-            ...f,
-            is_current: activeFarmId ? (String(f.id) === String(activeFarmId) ? 1 : 0) : (idx === 0 ? 1 : 0)
-        }));
+        return rawFarms.map((row, idx) => {
+            const isCurrent = activeFarmId ? (String(row.id) === String(activeFarmId)) : (idx === 0);
+            return new Farm({ ...row, is_current: isCurrent }).toJSON();
+        });
     }
 
     /**
      * Get a farm by ID.
      */
     static async getById(db, farmId) {
-        return await db.prepare("SELECT * FROM farms WHERE id = ?").bind(farmId).first();
+        const row = await db.prepare("SELECT * FROM farms WHERE id = ?").bind(farmId).first();
+        return row ? new Farm(row).toJSON() : null;
     }
 
     /**
      * Get first available farm.
      */
     static async getFirst(db) {
-        return await db.prepare("SELECT * FROM farms ORDER BY created_at ASC LIMIT 1").first();
+        const row = await db.prepare("SELECT * FROM farms ORDER BY created_at ASC LIMIT 1").first();
+        return row ? new Farm(row).toJSON() : null;
     }
 
     /**

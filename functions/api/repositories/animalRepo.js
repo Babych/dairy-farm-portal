@@ -1,4 +1,5 @@
 // Repository: Animals Persistence & Data Queries (Cloudflare D1)
+import { Animal } from '../models/Animal.js';
 
 export class AnimalRepository {
     /**
@@ -29,7 +30,8 @@ export class AnimalRepository {
         query += " ORDER BY farm_number ASC LIMIT ? OFFSET ?";
         params.push(limit, offset);
 
-        const items = (await db.prepare(query).bind(...params).all()).results || [];
+        const rawItems = (await db.prepare(query).bind(...params).all()).results || [];
+        const items = rawItems.map(row => new Animal(row).toJSON());
         return { total, items, offset, limit };
     }
 
@@ -37,7 +39,8 @@ export class AnimalRepository {
      * Get single animal by ID with passport details.
      */
     static async getById(db, animalId) {
-        return await db.prepare("SELECT * FROM animals WHERE id = ?").bind(animalId).first();
+        const row = await db.prepare("SELECT * FROM animals WHERE id = ?").bind(animalId).first();
+        return row ? new Animal(row).toJSON() : null;
     }
 
     /**
