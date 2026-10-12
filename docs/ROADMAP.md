@@ -74,6 +74,26 @@
 
 ---
 
+### 8. 🔒 Zero-Trust Edge IAM Tunnel (`--no-allow-unauthenticated`) (Крок 8 dev)
+- [ ] **Закриття Cloud Run від публічного інтернету:**
+  - Переведення сервісу Cloud Run у режим `--no-allow-unauthenticated`.
+  - Прямий доступ з браузерів до Cloud Run блокується на рівні Google Cloud Front End.
+- [ ] **Генерація Google IAM Identity Token на Cloudflare Edge:**
+  - У `functions/api/[[catchall]].js` підключити генерацію службового JWT/IAM токена через Service Account.
+  - Усі запити до парсера та важких операцій ідуть через захищений шлюз Cloudflare з автоматичним підписом.
+
+---
+
+### 9. 🏗️ DevOps Infrastructure as Code (IaC) & Повний авто-деплой (Крок 9 dev)
+- [ ] **Автоматичне підняття інфраструктури через GitHub Actions:**
+  - Підняття/оновлення сервісів Google Cloud Run (`dairy-farm-dev`) без ручних дій у веб-консолі.
+  - Налаштування Terraform або декларативних YAML-маніфестів для Cloud Run та Cloudflare.
+  - Автоматична ініціалізація та міграція тестових баз даних (Cloudflare D1 / Postgres).
+- [ ] **Секрети та оточення:**
+  - Зв'язування GitHub Secrets із секретами хмари (Secret Manager / Cloudflare Secrets).
+
+---
+
 ## 🛠️ Залишкові технічні завдання бекенду
 
 1. **Підключення `validateHealthEventInput`** до роутера збереження лікувань у бекенді.
