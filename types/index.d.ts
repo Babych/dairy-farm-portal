@@ -66,6 +66,7 @@ declare global {
         farmsModule: any;
         herdModule: any;
         dashboardModule: any;
+        queueOfflineMutation: any;
         setLanguage: any;
         t: any;
         openCow360?: (id: string) => void;

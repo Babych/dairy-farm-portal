@@ -4,7 +4,7 @@ import { store } from './state/store.js';
 import { farmsModule } from './modules/farms.js';
 import { herdModule } from './modules/herd.js';
 import { dashboardModule } from './modules/dashboard.js';
-import { flushOfflineOutbox } from './api/client.js';
+import { flushOfflineOutbox, queueOfflineMutation } from './api/client.js';
 import { applyLanguage, getCurrentLang, t } from './locales/i18n.js';
 
 // Expose on window for easy interoperability with existing modal handlers and onclick scripts
@@ -12,6 +12,7 @@ window.store = store;
 window.farmsModule = farmsModule;
 window.herdModule = herdModule;
 window.dashboardModule = dashboardModule;
+window.queueOfflineMutation = queueOfflineMutation;
 window.setLanguage = applyLanguage;
 window.t = t;
 

@@ -1,7 +1,7 @@
 // Ukrainian Localization Dictionary (uk.js)
 export const uk = {
     // Top Navigation & User Header
-    greeting: "Вітаємо",
+    greeting: "Вітаємо,",
     activeFarmLabel: "Активна ферма:",
     loadingFarms: "Завантаження ферм...",
     passportBtn: "Паспорт",

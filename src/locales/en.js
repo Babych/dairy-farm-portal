@@ -1,7 +1,7 @@
 // English Localization Dictionary (en.js)
 export const en = {
     // Top Navigation & User Header
-    greeting: "Welcome",
+    greeting: "Welcome,",
     activeFarmLabel: "Active Farm:",
     loadingFarms: "Loading farms...",
     passportBtn: "Passport",
