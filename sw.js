@@ -1,6 +1,5 @@
 // DairyERP Service Worker (PWA Offline & Instant Cache)
-// Bumped cache version to force client update:
-const CACHE_VERSION = 'dairy-erp-v2.5.2-' + Date.now();
+const CACHE_VERSION = 'dairy-erp-v2.5.2-rev1';
 
 const PRECACHE_ASSETS = [
   '/',
