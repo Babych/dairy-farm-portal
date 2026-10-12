@@ -4,5 +4,5 @@ pages_build_output_dir = "."
 
 [[d1_databases]]
 binding = "DB"
-database_name = "dairy-farm-db"
-database_id = "23d5107d-f30f-4a84-9dd7-d4516c9f5f60"
+database_name = "dairy-farm-db-dev"
+database_id = "b12df31e-5bc5-4004-8e62-28d9fa7d86ff"
