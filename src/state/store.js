@@ -24,6 +24,14 @@ export const store = reactive({
     outboxCount: 0,
     outboxItems: [],
 
+    // Metric display mode: 'heads' (Голови) vs 'percent' (%)
+    metricMode: localStorage.getItem("dairy_metric_mode") || "heads",
+
+    toggleMetricMode() {
+        this.metricMode = this.metricMode === "heads" ? "percent" : "heads";
+        localStorage.setItem("dairy_metric_mode", this.metricMode);
+    },
+
     // Toasts
     toasts: [],
 
