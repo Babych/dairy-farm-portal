@@ -1,24 +1,17 @@
 // DairyERP Service Worker (PWA Offline & Instant Cache)
 // Auto-incremented build token:
-const CACHE_VERSION = 'dairy-erp-v5c44eb8-mv531gby';
+const CACHE_VERSION = 'dairy-erp-v802ee70-mv586z1l';
 
 const PRECACHE_ASSETS = [
   '/',
+  '/index.html',
   '/manifest.json',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
-  '/lib/petite-vue.es.js',
-  '/src/main.js',
-  '/src/state/store.js',
-  '/src/api/client.js',
-  '/src/modules/farms.js',
-  '/src/modules/herd.js',
-  '/src/modules/dashboard.js',
-  '/src/locales/i18n.js',
-  '/src/locales/uk.js',
-  '/src/locales/en.js',
   'https://cdn.tailwindcss.com',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css',
+  'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
+  'https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js',
   'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'
 ];
 
@@ -103,16 +96,17 @@ self.addEventListener('fetch', (event) => {
           networkResponse &&
           networkResponse.status === 200 &&
           !networkResponse.redirected &&
-          (url.origin === self.location.origin || url.hostname.includes('cdn') || url.hostname.includes('googleapis'))
+          (url.origin === self.location.origin || url.hostname.includes('cdn') || url.hostname.includes('googleapis') || url.hostname.includes('cdnjs'))
         ) {
           const clone = networkResponse.clone();
           caches.open(CACHE_VERSION).then((cache) => cache.put(req, clone));
         }
         return networkResponse;
-      }).catch(() => {
-        // Offline fallback for HTML navigation
-        if (req.mode === 'navigate') {
-          return caches.match('/');
+      }).catch(async () => {
+        // Offline fallback for HTML navigation on slow/Edge connection
+        if (req.mode === 'navigate' || req.headers.get('accept')?.includes('text/html')) {
+          const cache = await caches.open(CACHE_VERSION);
+          return (await cache.match('/')) || (await cache.match('/index.html'));
         }
       });
     })

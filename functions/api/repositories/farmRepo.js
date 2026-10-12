@@ -16,9 +16,11 @@ export class FarmRepository {
         if (userRole === "superadmin") {
             // superadmin sees all farms
         } else if (userEmail) {
-            query += " WHERE f.owner_email = ?";
+            // Users see farms they own, farms without explicit owner (global/demo), or all farms if authorized
+            query += " WHERE (f.owner_email = ? OR f.owner_email IS NULL)";
             params.push(userEmail);
         } else {
+            // Unauthenticated guest sees default/unassigned or public farms
             query += " WHERE f.owner_email IS NULL";
         }
         query += " GROUP BY f.id ORDER BY f.created_at ASC";

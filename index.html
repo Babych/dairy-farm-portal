@@ -138,6 +138,10 @@
             <button id="headerInstallBtn" onclick="openInstallModal()" title="Встановити додаток на смартфон / Офлайн доступ" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
                 <i class="fa-solid fa-mobile-screen-button text-emerald-600"></i> <span class="hidden sm:inline" data-i18n="installAppBtn">Встановити апп</span><span class="sm:hidden text-[11px]">Апп</span>
             </button>
+            <!-- Quick refresh button -->
+            <button id="headerRefreshBtn" onclick="refreshDashboardData(true)" title="Швидке оновлення даних ферми" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 border border-slate-200">
+                <i id="headerRefreshIcon" class="fa-solid fa-arrows-rotate text-emerald-600 transition-transform"></i> <span class="hidden sm:inline">Оновити</span>
+            </button>
             <!-- Backup download button (shown only when authenticated) -->
             <button id="headerBackupBtn" onclick="downloadBackup()" title="Завантажити резервну копію бази даних" class="hidden bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition items-center gap-1.5 border border-slate-200">
                 <i class="fa-solid fa-download text-emerald-600"></i> <span class="hidden sm:inline">Бекап</span>
@@ -149,6 +153,14 @@
             </div>
         </div>
     </header>
+
+    <!-- PULL-TO-REFRESH FLOATING INDICATOR -->
+    <div id="pullToRefreshIndicator" class="fixed top-2 left-1/2 -translate-x-1/2 z-50 pointer-events-none transition-all duration-200 transform -translate-y-16 opacity-0">
+        <div class="bg-white/95 backdrop-blur-md border border-emerald-300 text-emerald-800 px-4 py-2 rounded-full shadow-xl flex items-center gap-2 text-xs font-bold">
+            <i id="ptrIcon" class="fa-solid fa-arrows-rotate text-emerald-600 transition-transform"></i>
+            <span id="ptrText">Потягніть для оновлення...</span>
+        </div>
+    </div>
 
     <!-- NOTIFICATION TOAST -->
     <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none">
@@ -311,22 +323,22 @@
                 <button id="navTabAnimalsBtn" onclick="switchTab('animals')" class="nav-tab-btn active bg-emerald-600 text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
                     <i class="fa-solid fa-list-check"></i> <span data-i18n="navAnimals">Поголів'я корів</span>
                 </button>
-                <button onclick="switchTab('grid')" class="nav-tab-btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                <button id="navTabGridBtn" onclick="switchTab('grid')" class="nav-tab-btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
                     <i class="fa-solid fa-calendar-days text-indigo-600"></i> <span data-i18n="navGrid">Журнал подій стада</span>
                 </button>
-                <button onclick="switchTab('actions')" class="nav-tab-btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                <button id="navTabActionsBtn" onclick="switchTab('actions')" class="nav-tab-btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
                     <i class="fa-solid fa-bell text-amber-500"></i> <span data-i18n="navActions">Смарт-Алерти & Завдання</span>
                 </button>
-                <button onclick="switchTab('meds')" class="nav-tab-btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                <button id="navTabMedsBtn" onclick="switchTab('meds')" class="nav-tab-btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
                     <i class="fa-solid fa-pills text-rose-500"></i> <span data-i18n="navMeds">Аптечка & Терміни</span>
                 </button>
-                <button onclick="switchTab('users')" id="usersTabBtn" class="nav-tab-btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                <button id="navTabUsersBtn" onclick="switchTab('users')" class="nav-tab-btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
                     <i class="fa-solid fa-users-gear text-teal-600"></i> <span data-i18n="navUsers">Користувачі</span>
                 </button>
-                <button onclick="switchTab('metrics')" id="metricsTabBtn" class="nav-tab-btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                <button id="navTabMetricsBtn" onclick="switchTab('metrics')" class="nav-tab-btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
                     <i class="fa-solid fa-chart-line text-purple-600"></i> <span data-i18n="navMetrics">Метрики сайту</span>
                 </button>
-                <button onclick="switchTab('logs')" id="logsTabBtn" class="nav-tab-btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                <button id="navTabLogsBtn" onclick="switchTab('logs')" class="nav-tab-btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
                     <i class="fa-solid fa-clock-rotate-left text-slate-500"></i> <span data-i18n="navLogs">Логи подій</span>
                 </button>
             </div>
@@ -1998,8 +2010,15 @@
                 return;
             }
 
+            // Offline / Slow Connection Support: Check if we have an existing local session
+            const cachedUser = JSON.parse(localStorage.getItem("dairy_user") || "null");
+
             try {
-                const res = await fetch(`${API_BASE}/api/system/status`);
+                // Use a short 3-second timeout for status check so slow 2G/Edge connections don't hang indefinitely
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3500);
+                const res = await fetch(`${API_BASE}/api/system/status`, { signal: controller.signal });
+                clearTimeout(timeoutId);
                 const data = await res.json().catch(() => ({ is_configured: true }));
                 
                 // If system genuinely has 0 users and is not configured
@@ -2009,33 +2028,54 @@
                     document.getElementById('appDashboard').classList.add('hidden');
                     return;
                 }
+            } catch (netErr) {
+                console.warn("[PWA Offline] Could not reach status endpoint, continuing in offline/cached mode:", netErr);
+            }
 
-                // If real token exists, validate session
-                if (token && token !== "demo_mode_token") {
-                    try {
-                        const statsRes = await fetch(`${API_BASE}/api/dashboard/stats`, {
-                            headers: { "Authorization": `Bearer ${token}` }
-                        });
-                        if (statsRes.ok) {
-                            const cachedUser = JSON.parse(localStorage.getItem("dairy_user") || "{}");
+            // If real token exists, validate or resume session
+            if (token && token !== "demo_mode_token") {
+                try {
+                    // Try to fetch stats with 4-second timeout
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 4000);
+                    const statsRes = await fetch(`${API_BASE}/api/dashboard/stats`, {
+                        headers: { "Authorization": `Bearer ${token}` },
+                        signal: controller.signal
+                    });
+                    clearTimeout(timeoutId);
+
+                    if (statsRes.ok) {
+                        currentUser = cachedUser || { role: 'operator', full_name: 'Користувач' };
+                        showDashboard();
+                        return;
+                    } else if (statsRes.status === 401 || statsRes.status === 403) {
+                        // Truly invalid/revoked token: clear session
+                        localStorage.removeItem("dairy_token");
+                        localStorage.removeItem("dairy_user");
+                        token = null;
+                        currentUser = null;
+                    } else {
+                        // 5xx server error or gateway glitch: keep offline dashboard
+                        if (cachedUser) {
                             currentUser = cachedUser;
                             showDashboard();
                             return;
-                        } else {
-                            // Invalid/expired token
-                            localStorage.removeItem("dairy_token");
-                            localStorage.removeItem("dairy_user");
-                            token = null;
-                            currentUser = null;
                         }
-                    } catch (e) {
-                        console.warn("Token validation error", e);
                     }
+                } catch (e) {
+                    // Network timeout or completely offline:
+                    // Crucial fix: DO NOT show login screen or hang on white screen!
+                    // If we have token, resume dashboard immediately using cached data!
+                    console.warn("[PWA Offline] Network slow/offline, resuming dashboard with local cache", e);
+                    currentUser = cachedUser || { role: 'operator', full_name: 'Користувач' };
+                    showDashboard();
+                    return;
                 }
+            }
 
-                // Default on root page: show Login Screen (with Google Auth & Demo button)
-                document.getElementById('onboardingScreen').classList.add('hidden');
-                document.getElementById('loginScreen').classList.remove('hidden');
+            // Default on root page if no session: show Login Screen (with Google Auth & Demo button)
+            document.getElementById('onboardingScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
                 document.getElementById('appDashboard').classList.add('hidden');
 
                 // Header buttons state when unauthenticated:
@@ -2223,14 +2263,43 @@
             }
 
             updateTileHighlight('Active');
-            loadFarms();
-            loadStats();
-            loadAnimals();
-            loadActionLists();
-            loadMedications();
-            if (currentUser?.role === 'superadmin') {
-                loadUsers();
-                loadAdminMetrics();
+            refreshDashboardData(false);
+        }
+
+        let isRefreshingData = false;
+        let lastAutoRefreshTime = Date.now();
+
+        async function refreshDashboardData(showFeedback = true) {
+            if (isRefreshingData) return;
+            isRefreshingData = true;
+            lastAutoRefreshTime = Date.now();
+
+            const refreshIcon = document.getElementById('headerRefreshIcon');
+            if (refreshIcon) refreshIcon.classList.add('fa-spin');
+
+            try {
+                await Promise.allSettled([
+                    loadFarms(),
+                    loadStats(),
+                    loadAnimals(),
+                    loadActionLists(),
+                    loadMedications()
+                ]);
+
+                if (currentUser?.role === 'superadmin') {
+                    loadUsers();
+                    loadAdminMetrics();
+                }
+
+                if (showFeedback) {
+                    showToast("✓ Дані ферми оновлено", "success");
+                    if (navigator.vibrate) navigator.vibrate(25);
+                }
+            } catch (err) {
+                if (showFeedback) showToast("Не вдалося оновити дані", "error");
+            } finally {
+                if (refreshIcon) refreshIcon.classList.remove('fa-spin');
+                isRefreshingData = false;
             }
         }
 
@@ -2242,42 +2311,41 @@
             });
             document.querySelectorAll('.tab-pane').forEach(p => p.classList.add('hidden'));
 
+            const tabBtnMap = {
+                'animals': 'navTabAnimalsBtn',
+                'actions': 'navTabActionsBtn',
+                'users': 'navTabUsersBtn',
+                'metrics': 'navTabMetricsBtn',
+                'logs': 'navTabLogsBtn',
+                'grid': 'navTabGridBtn',
+                'meds': 'navTabMedsBtn'
+            };
+
+            const targetBtn = document.getElementById(tabBtnMap[tabId]);
+            if (targetBtn) {
+                targetBtn.classList.add('bg-emerald-600', 'text-white', 'shadow-sm');
+                targetBtn.classList.remove('bg-slate-100', 'text-slate-700');
+            }
+
             if (tabId === 'animals') {
-                document.getElementById('tabContentAnimals').classList.remove('hidden');
-                const btn = document.getElementById('navTabAnimalsBtn') || event?.currentTarget;
-                if (btn) {
-                    btn.classList.add('bg-emerald-600', 'text-white', 'shadow-sm');
-                    btn.classList.remove('bg-slate-100', 'text-slate-700');
-                }
+                document.getElementById('tabContentAnimals')?.classList.remove('hidden');
             } else if (tabId === 'actions') {
-                document.getElementById('tabContentActions').classList.remove('hidden');
-                event?.currentTarget?.classList.add('bg-emerald-600', 'text-white', 'shadow-sm');
-                event?.currentTarget?.classList.remove('bg-slate-100', 'text-slate-700');
+                document.getElementById('tabContentActions')?.classList.remove('hidden');
                 loadActionLists();
             } else if (tabId === 'users') {
-                document.getElementById('tabContentUsers').classList.remove('hidden');
-                event?.currentTarget?.classList.add('bg-emerald-600', 'text-white', 'shadow-sm');
-                event?.currentTarget?.classList.remove('bg-slate-100', 'text-slate-700');
+                document.getElementById('tabContentUsers')?.classList.remove('hidden');
                 loadUsers();
             } else if (tabId === 'metrics') {
-                document.getElementById('tabContentMetrics').classList.remove('hidden');
-                event?.currentTarget?.classList.add('bg-emerald-600', 'text-white', 'shadow-sm');
-                event?.currentTarget?.classList.remove('bg-slate-100', 'text-slate-700');
+                document.getElementById('tabContentMetrics')?.classList.remove('hidden');
                 loadAdminMetrics();
             } else if (tabId === 'logs') {
-                document.getElementById('tabContentLogs').classList.remove('hidden');
-                event?.currentTarget?.classList.add('bg-emerald-600', 'text-white', 'shadow-sm');
-                event?.currentTarget?.classList.remove('bg-slate-100', 'text-slate-700');
+                document.getElementById('tabContentLogs')?.classList.remove('hidden');
                 loadSystemLogs();
             } else if (tabId === 'grid') {
-                document.getElementById('tabContentGrid').classList.remove('hidden');
-                event?.currentTarget?.classList.add('bg-emerald-600', 'text-white', 'shadow-sm');
-                event?.currentTarget?.classList.remove('bg-slate-100', 'text-slate-700');
+                document.getElementById('tabContentGrid')?.classList.remove('hidden');
                 loadEventGrid();
             } else if (tabId === 'meds') {
-                document.getElementById('tabContentMeds').classList.remove('hidden');
-                event?.currentTarget?.classList.add('bg-emerald-600', 'text-white', 'shadow-sm');
-                event?.currentTarget?.classList.remove('bg-slate-100', 'text-slate-700');
+                document.getElementById('tabContentMeds')?.classList.remove('hidden');
                 loadMedsCatalog();
             }
         }
@@ -2741,12 +2809,14 @@
             };
 
             document.querySelectorAll('.herd-tile-btn').forEach(b => {
-                b.classList.remove('ring-2', 'ring-indigo-600', 'ring-offset-2');
+                b.classList.remove('ring-2', 'ring-indigo-600', 'ring-offset-2', 'bg-emerald-600', 'text-white', 'shadow-md');
             });
 
             if (currentFilter && currentFilter !== 'ALL' && tileMap[currentFilter]) {
                 const targetBtn = document.getElementById(tileMap[currentFilter]);
-                if (targetBtn) targetBtn.classList.add('ring-2', 'ring-indigo-600', 'ring-offset-2');
+                if (targetBtn) {
+                    targetBtn.classList.add('ring-2', 'ring-indigo-600', 'ring-offset-2', 'shadow-md');
+                }
             }
         }
 
@@ -4024,6 +4094,16 @@
         }
 
         function openInstallModal() {
+            const currentUrl = window.location.origin || window.location.href;
+            const qrImg = document.getElementById('installModalQrImg');
+            const urlText = document.getElementById('installModalUrlText');
+            if (qrImg) {
+                // QR code generator using standard high-speed SVG/PNG API
+                qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(currentUrl)}`;
+            }
+            if (urlText) {
+                urlText.textContent = currentUrl.replace(/^https?:\/\//, '');
+            }
             document.getElementById('installModal').classList.remove('hidden');
         }
 
@@ -4042,6 +4122,104 @@
                 showToast('Дотримуйтесь інструкцій для вашого браузера нижче', 'info');
             }
         }
+        // SMART AUTO-REFRESH & MOBILE PULL-TO-REFRESH
+        (function initAutoRefreshAndPullToRefresh() {
+            // 1. Smart Focus Revalidate (коли повертаються у вкладку або розблоковують телефон)
+            const REVALIDATE_INTERVAL_MS = 60 * 1000; // 60 секунд
+            function handleWindowFocusOrVisible() {
+                if (document.visibilityState === 'visible' && token) {
+                    const elapsed = Date.now() - lastAutoRefreshTime;
+                    if (elapsed >= REVALIDATE_INTERVAL_MS) {
+                        refreshDashboardData(false);
+                    }
+                }
+            }
+            window.addEventListener('focus', handleWindowFocusOrVisible);
+            document.addEventListener('visibilitychange', handleWindowFocusOrVisible);
+
+            // 2. Mobile Touch Pull-to-Refresh Implementation
+            let touchStartY = 0;
+            let touchCurrentY = 0;
+            let isPulling = false;
+            const PULL_THRESHOLD = 75; // px
+
+            const ptrIndicator = document.getElementById('pullToRefreshIndicator');
+            const ptrIcon = document.getElementById('ptrIcon');
+            const ptrText = document.getElementById('ptrText');
+
+            window.addEventListener('touchstart', (e) => {
+                // Тільки якщо ми на самому верху сторінки і немає відкритих модалок
+                const hasOpenModal = document.querySelector('.fixed.inset-0:not(.hidden)');
+                if (window.scrollY <= 2 && !hasOpenModal && e.touches.length === 1) {
+                    touchStartY = e.touches[0].clientY;
+                    isPulling = false;
+                } else {
+                    touchStartY = 0;
+                }
+            }, { passive: true });
+
+            window.addEventListener('touchmove', (e) => {
+                if (!touchStartY || e.touches.length !== 1) return;
+                touchCurrentY = e.touches[0].clientY;
+                const pullDistance = touchCurrentY - touchStartY;
+
+                if (pullDistance > 10 && window.scrollY <= 2) {
+                    isPulling = true;
+                    if (ptrIndicator) {
+                        const progress = Math.min(pullDistance / PULL_THRESHOLD, 1.5);
+                        const translateY = Math.min(pullDistance * 0.45, 45);
+                        ptrIndicator.style.transform = `translate(-50%, ${translateY}px)`;
+                        ptrIndicator.style.opacity = `${Math.min(progress, 1)}`;
+
+                        if (pullDistance >= PULL_THRESHOLD) {
+                            if (ptrIcon) ptrIcon.style.transform = 'rotate(180deg)';
+                            if (ptrText) ptrText.textContent = 'Відпустіть для оновлення';
+                        } else {
+                            if (ptrIcon) ptrIcon.style.transform = `rotate(${pullDistance * 2}deg)`;
+                            if (ptrText) ptrText.textContent = 'Потягніть для оновлення...';
+                        }
+                    }
+                }
+            }, { passive: true });
+
+            window.addEventListener('touchend', async () => {
+                if (!isPulling || !touchStartY) {
+                    touchStartY = 0;
+                    return;
+                }
+                const pullDistance = touchCurrentY - touchStartY;
+                touchStartY = 0;
+                isPulling = false;
+
+                if (pullDistance >= PULL_THRESHOLD) {
+                    if (ptrIndicator) {
+                        ptrIndicator.style.transform = 'translate(-50%, 25px)';
+                        ptrIndicator.style.opacity = '1';
+                    }
+                    if (ptrIcon) {
+                        ptrIcon.classList.add('fa-spin');
+                        ptrIcon.style.transform = '';
+                    }
+                    if (ptrText) ptrText.textContent = 'Оновлення даних ферми...';
+
+                    await refreshDashboardData(true);
+
+                    setTimeout(() => {
+                        if (ptrIndicator) {
+                            ptrIndicator.style.transform = 'translate(-50%, -64px)';
+                            ptrIndicator.style.opacity = '0';
+                        }
+                        if (ptrIcon) ptrIcon.classList.remove('fa-spin');
+                    }, 400);
+                } else {
+                    // Скасування жесту
+                    if (ptrIndicator) {
+                        ptrIndicator.style.transform = 'translate(-50%, -64px)';
+                        ptrIndicator.style.opacity = '0';
+                    }
+                }
+            }, { passive: true });
+        })();
     </script>
 
     <!-- FOOTER WITH DISCREET ABOUT / CONTACT MODAL TRIGGER -->
@@ -4077,6 +4255,23 @@
             <p class="text-xs text-slate-600 leading-relaxed bg-slate-50 border border-slate-200 rounded-2xl p-3" data-i18n="installModalDesc">
                 DairyERP підтримує роботу як автономний PWA-додаток. Всі сторінки та довідники кешуються на вашому телефоні, тому відкриваються миттєво навіть при слабкому зв'язку 3G/Edge у приміщеннях ферми.
             </p>
+
+            <!-- QR-код для миттєвого відкриття з камери смартфона -->
+            <div class="bg-gradient-to-br from-emerald-50 to-teal-50/60 border border-emerald-200/80 rounded-2xl p-4 flex items-center gap-4 shadow-sm">
+                <div class="bg-white p-2 rounded-xl border border-emerald-100 shadow-sm flex-shrink-0 flex items-center justify-center">
+                    <img id="installModalQrImg" src="" alt="QR-код порталу" class="w-24 h-24 rounded-lg object-contain" />
+                </div>
+                <div class="space-y-1">
+                    <div class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800">
+                        <i class="fa-solid fa-qrcode text-emerald-600"></i>
+                        <span data-i18n="installQrTitle">Швидкий перехід з телефону</span>
+                    </div>
+                    <p class="text-[11px] text-slate-600 leading-snug" data-i18n="installQrSubtitle">
+                        Наведіть камеру смартфона на цей QR-код, щоб відкрити портал і встановити ярлик на свій екран за 5 секунд.
+                    </p>
+                    <p id="installModalUrlText" class="text-[10px] font-mono text-emerald-700 font-semibold truncate max-w-[210px]"></p>
+                </div>
+            </div>
 
             <div class="space-y-2">
                 <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider" data-i18n="installModalHowTo">Як встановити ярлик на телефон чи ПК:</h4>
