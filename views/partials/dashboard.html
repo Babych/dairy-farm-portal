@@ -1,0 +1,226 @@
+            <i id="ptrIcon" class="fa-solid fa-arrows-rotate text-emerald-600 transition-transform"></i>
+            <span id="ptrText">Потягніть для оновлення...</span>
+        </div>
+    </div>
+
+    <!-- NOTIFICATION TOAST -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-[9999] flex flex-col gap-2 pointer-events-none">
+        <div v-for="t in store.toasts" :key="t.id"
+             :class="t.type === 'error' ? 'bg-rose-600 border border-rose-400/40 shadow-2xl' : 'bg-emerald-600 shadow-lg'"
+             class="text-white text-xs px-4 py-3 rounded-xl flex items-start justify-between gap-3 transform transition-all duration-300 ease-out pointer-events-auto max-w-md">
+            <div class="flex items-start gap-2.5">
+                <i :class="t.type === 'error' ? 'fa-solid fa-circle-exclamation text-rose-200 mt-0.5' : 'fa-solid fa-check text-white mt-0.5'"></i>
+                <span class="leading-relaxed select-text">{{ t.message }}</span>
+            </div>
+            <button v-if="t.type === 'error'" @click="store.removeToast(t.id)" type="button" class="text-rose-200 hover:text-white transition ml-2 p-0.5 focus:outline-none" title="Закрити">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- 0. FIRST-RUN ONBOARDING SETUP (Rendered if 0 users in DB) -->
+    <div id="onboardingScreen" class="hidden flex-1 flex items-center justify-center p-6">
+        <div class="bg-white border border-slate-200 rounded-3xl p-8 max-w-lg w-full shadow-xl space-y-6">
+            <div class="text-center space-y-2">
+                <div class="w-14 h-14 mx-auto rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl font-bold">
+                    🚀
+                </div>
+                <h2 class="text-2xl font-bold text-slate-900">Початкове налаштування</h2>
+                <p class="text-xs text-slate-500">Створіть головний обліковий запис адміністратора ферми</p>
+            </div>
+
+            <form onsubmit="handleFirstRunSetup(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Назва господарства</label>
+                    <input id="obFarmName" type="text" value="Головна молочна ферма" required
+                           class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">ПІБ Адміністратора (Зоотехнік / Власник)</label>
+                    <input id="obAdminName" type="text" placeholder="Головний Зоотехнік" required
+                           class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Email адміністратора</label>
+                    <input id="obAdminEmail" type="email" placeholder="admin@dairy-erp.farm" required
+                           class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Пароль (Bcrypt захищений)</label>
+                    <input id="obAdminPassword" type="password" placeholder="••••••••••••" required minlength="6"
+                           class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition">
+                </div>
+
+                <div id="obError" class="hidden text-xs text-rose-600 font-medium p-3 bg-rose-50 border border-rose-200 rounded-xl"></div>
+
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-flag-checkered"></i> Ініціалізувати систему та увійти
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 1. LOGIN SCREEN -->
+    <div id="loginScreen" class="hidden flex-1 flex items-center justify-center p-6">
+        <div class="bg-white border border-slate-200 rounded-3xl p-8 max-w-md w-full shadow-xl space-y-6 text-center">
+            <div class="space-y-2">
+                <div class="w-14 h-14 mx-auto rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-2xl font-bold shadow-sm">
+                    🐄
+                </div>
+                <h2 class="text-2xl font-bold text-slate-900" data-i18n="loginTitle">Вхід у DairyERP</h2>
+                <p class="text-xs text-slate-500 max-w-xs mx-auto" data-i18n="loginSubtitle">Безпечний доступ до кабінету ферми за допомогою Google облікового запису</p>
+            </div>
+
+            <!-- Google Sign-In Container (Strictly locked 280px width & 44px height: prevents horizontal & vertical jumps) -->
+            <div class="flex flex-col items-center justify-center h-[44px] w-full">
+                <div id="g_id_onload"
+                     data-client_id="733707845450-vui70uu318k17qvfjicu4tb5q2dsdrdg.apps.googleusercontent.com"
+                     data-callback="handleGoogleCredentialResponse"
+                     data-auto_prompt="false">
+                </div>
+                <div class="g_id_signin flex justify-center w-[280px] h-[44px]" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with" data-shape="pill" data-logo_alignment="left" data-width="280"></div>
+            </div>
+
+            <div class="relative flex py-1 items-center max-w-[280px] mx-auto w-full">
+                <div class="flex-grow border-t border-slate-200"></div>
+                <span class="flex-shrink mx-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider" data-i18n="loginOrDemo">або ознайомлення</span>
+                <div class="flex-grow border-t border-slate-200"></div>
+            </div>
+
+            <div class="w-full flex justify-center">
+                <button type="button" onclick="startInstantDemoMode()" class="w-[280px] bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold py-2.5 px-4 rounded-full transition flex items-center justify-center gap-2 text-xs shadow-sm hover:shadow">
+                    <span class="text-amber-600 text-sm">✨</span> <span data-i18n="loginTryDemo">Демо-режим без реєстрації</span>
+                </button>
+            </div>
+
+            <p class="text-[11px] text-slate-400 pt-1" data-i18n="loginNotice">
+                Для нового користувача створюється особистий простір з можливістю імпорту Uniform-Agri.
+            </p>
+
+            <!-- SEO & Feature Highlights (Multilingual & Crawlable) -->
+            <div class="pt-4 border-t border-slate-100 text-left space-y-2.5">
+                <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider text-center" data-i18n="loginFeaturesTitle">
+                    Можливості для користувачів Uniform-Agri:
+                </h3>
+                <ul class="text-xs text-slate-600 space-y-2">
+                    <li class="flex items-start gap-2">
+                        <i class="fa-solid fa-cloud-arrow-up text-emerald-600 mt-0.5 flex-shrink-0"></i>
+                        <span data-i18n="loginFeatImport"><b>Прямий імпорт Firebird (.FDB / .ZIP):</b> 100% збереження історії корів, лактацій та ветеринарних записів.</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="fa-solid fa-mobile-screen-button text-emerald-600 mt-0.5 flex-shrink-0"></i>
+                        <span data-i18n="loginFeatMobile"><b>Мобільний доступ у корівнику:</b> швидка перевірка статусів тварин зі смартфона онлайн та офлайн.</span>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i class="fa-solid fa-shield-halved text-emerald-600 mt-0.5 flex-shrink-0"></i>
+                        <span data-i18n="loginFeatMeds"><b>Контроль каренції антибіотиків:</b> автоматичний моніторинг бракеражу молока та м'яса.</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. MAIN APP DASHBOARD -->
+    <div id="appDashboard" class="hidden flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
+        
+        <!-- Верхня панель користувача & Навігація (Організована поверхами без горизонтального скролу) -->
+        <div class="bg-white border border-slate-200 p-3 sm:p-5 rounded-2xl shadow-sm space-y-3">
+            <!-- 1-й поверх: Привітання, ферма, роль та вихід -->
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 pb-3">
+                <div class="flex flex-wrap items-center gap-2 sm:gap-3 min-w-0">
+                    <h2 class="text-base sm:text-xl font-bold text-slate-900 flex items-center gap-1.5 mr-1 truncate">
+                        <span data-i18n="greeting">Вітаємо,</span> <span id="userNameDisplay" v-text="store.currentUser ? (store.currentUser.name || store.currentUser.email) : ''" class="text-emerald-600"></span>! 👋
+                    </h2>
+                    <span id="userRoleBadge" v-text="store.currentUser ? store.currentUser.role : 'guest'" class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-lg text-[11px] font-semibold">superadmin</span>
+                    
+                    <!-- Селектор активної ферми з захистом від переповнення контейнера -->
+                    <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-xl max-w-full min-w-0">
+                        <span class="text-[11px] text-slate-500 font-medium whitespace-nowrap" data-i18n="activeFarmLabel">Ферма:</span>
+                        <div class="relative min-w-0 flex-1 max-w-[150px] sm:max-w-[260px]">
+                            <select id="farmSelectDropdown" v-model="store.currentFarmId" @change="farms.switchFarm($event.target.value)" onchange="onFarmDropdownChange(this.value)" class="w-full bg-transparent text-xs font-bold text-slate-800 cursor-pointer focus:outline-none focus:ring-0 truncate pr-4">
+                                <option v-if="!store.farmsList || store.farmsList.length === 0" value="" data-i18n="loadingFarms">Завантаження ферм...</option>
+                                <option v-for="f in store.farmsList" :key="f.id" :value="f.id" v-text="f.name + (f.role ? ' (' + f.role + ')' : '')"></option>
+                            </select>
+                        </div>
+                        <button onclick="openNewFarmModal()" title="Створити нову ферму" class="text-slate-400 hover:text-emerald-600 p-0.5 text-xs transition flex-shrink-0">
+                            <i class="fa-solid fa-circle-plus"></i>
+                        </button>
+                        <button onclick="openFarmPassportModal()" title="Анкета & Паспорт господарства" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded text-[11px] font-semibold flex items-center gap-1 transition flex-shrink-0">
+                            <i class="fa-solid fa-id-card"></i> <span data-i18n="passportBtn">Паспорт</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 flex-shrink-0 self-end sm:self-auto">
+                    <button onclick="openImportModal()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-file-import"></i> <span data-i18n="navImport">Імпорт Uniform</span>
+                    </button>
+                    <button onclick="logout()" class="bg-slate-100 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 text-slate-600 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-semibold transition">
+                        <span data-i18n="logoutBtn">Вийти</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2-й поверх: Всі розділи системи (Flex Wrap у поверхи без скролу) -->
+            <div class="flex flex-wrap items-center gap-2 pt-0.5">
+                <button id="navTabAnimalsBtn" onclick="switchTab('animals')" class="nav-tab-btn active bg-emerald-600 text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-list-check"></i> <span data-i18n="navAnimals">Поголів'я корів</span>
+                </button>
+                <button id="navTabGridBtn" onclick="switchTab('grid')" class="nav-tab-btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-calendar-days text-indigo-600"></i> <span data-i18n="navGrid">Журнал подій стада</span>
+                </button>
+                <button id="navTabActionsBtn" onclick="switchTab('actions')" class="nav-tab-btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-bell text-amber-500"></i> <span data-i18n="navActions">Смарт-Алерти & Завдання</span>
+                </button>
+                <button id="navTabMedsBtn" onclick="switchTab('meds')" class="nav-tab-btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-pills text-rose-500"></i> <span data-i18n="navMeds">Аптечка & Терміни</span>
+                </button>
+                <button id="navTabUsersBtn" onclick="switchTab('users')" class="nav-tab-btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-users-gear text-teal-600"></i> <span data-i18n="navUsers">Користувачі</span>
+                </button>
+                <button id="navTabMetricsBtn" onclick="switchTab('metrics')" class="nav-tab-btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-chart-line text-purple-600"></i> <span data-i18n="navMetrics">Метрики сайту</span>
+                </button>
+                <button id="navTabLogsBtn" onclick="switchTab('logs')" class="nav-tab-btn bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-clock-rotate-left text-slate-500"></i> <span data-i18n="navLogs">Логи подій</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Панель статусу стада (Herd Summary Tiles / Interactive Filters) -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+            <button @click="filterByStatus('Active')" onclick="filterByHerdStatus('Active')" id="tileBtnOpen" class="herd-tile-btn text-left bg-blue-50/70 hover:bg-blue-100/70 border border-blue-200 rounded-2xl p-4 shadow-sm transition hover:shadow-md cursor-pointer flex flex-col justify-between group">
+                <div class="flex justify-between items-center w-full">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-blue-700" data-i18n="tileOpenTitle">Готові до осіменіння</span>
+                    <span id="tileOpenPct" v-text="dashboard.pctOpen + '%'" class="text-[10px] font-semibold text-blue-600 bg-blue-100/80 px-1.5 py-0.5 rounded-full">0%</span>
+                </div>
+                <h4 id="tileOpen" v-text="(dashboard.stats.herd_tiles?.open || 0).toLocaleString()" class="text-2xl font-black text-blue-900 my-1 group-hover:scale-105 transition-transform origin-left">0</h4>
+                <p class="text-[10px] text-blue-600" data-i18n="tileOpenSub">Охота / Сервіс-період</p>
+            </button>
+            <button @click="filterByStatus('Inseminated')" onclick="filterByHerdStatus('Inseminated')" id="tileBtnIns" class="herd-tile-btn text-left bg-amber-50/70 hover:bg-amber-100/70 border border-amber-200 rounded-2xl p-4 shadow-sm transition hover:shadow-md cursor-pointer flex flex-col justify-between group">
+                <div class="flex justify-between items-center w-full">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700" data-i18n="tileInsTitle">Осімененi</span>
+                    <span id="tileInsPct" v-text="dashboard.pctIns + '%'" class="text-[10px] font-semibold text-amber-700 bg-amber-100/80 px-1.5 py-0.5 rounded-full">0%</span>
+                </div>
+                <h4 id="tileIns" v-text="(dashboard.stats.herd_tiles?.inseminated || 0).toLocaleString()" class="text-2xl font-black text-amber-900 my-1 group-hover:scale-105 transition-transform origin-left">0</h4>
+                <p class="text-[10px] text-amber-600" data-i18n="tileInsSub">Очікують УЗД</p>
+            </button>
+            <button @click="filterByStatus('Pregnant')" onclick="filterByHerdStatus('Pregnant')" id="tileBtnPreg" class="herd-tile-btn text-left bg-emerald-50/70 hover:bg-emerald-100/70 border border-emerald-200 rounded-2xl p-4 shadow-sm transition hover:shadow-md cursor-pointer flex flex-col justify-between group">
+                <div class="flex justify-between items-center w-full">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700" data-i18n="tilePregTitle">Тільні</span>
+                    <span id="tilePregPct" v-text="dashboard.pctPreg + '%'" class="text-[10px] font-semibold text-emerald-700 bg-emerald-100/80 px-1.5 py-0.5 rounded-full">0%</span>
+                </div>
+                <h4 id="tilePreg" v-text="(dashboard.stats.herd_tiles?.pregnant || 0).toLocaleString()" class="text-2xl font-black text-emerald-900 my-1 group-hover:scale-105 transition-transform origin-left">0</h4>
+                <p class="text-[10px] text-emerald-600" data-i18n="tilePregSub">Підтверджено</p>
+            </button>
+            <button @click="filterByStatus('Dry')" onclick="filterByHerdStatus('Dry')" id="tileBtnDry" class="herd-tile-btn text-left bg-orange-50/70 hover:bg-orange-100/70 border border-orange-200 rounded-2xl p-4 shadow-sm transition hover:shadow-md cursor-pointer flex flex-col justify-between group">
+                <div class="flex justify-between items-center w-full">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-orange-700" data-i18n="tileDryTitle">Сухостійні</span>
+                    <span id="tileDryPct" v-text="dashboard.pctDry + '%'" class="text-[10px] font-semibold text-orange-700 bg-orange-100/80 px-1.5 py-0.5 rounded-full">0%</span>
+                </div>
+                <h4 id="tileDry" v-text="(dashboard.stats.herd_tiles?.dry || 0).toLocaleString()" class="text-2xl font-black text-orange-900 my-1 group-hover:scale-105 transition-transform origin-left">0</h4>
+                <p class="text-[10px] text-orange-600" data-i18n="tileDrySub">Перед отелом</p>
+            </button>
+            <button @click="filterByStatus('Fresh')" onclick="filterByHerdStatus('Fresh')" id="tileBtnFresh" class="herd-tile-btn text-left bg-cyan-50/70 hover:bg-cyan-100/70 border border-cyan-200 rounded-2xl p-4 shadow-sm transition hover:shadow-md cursor-pointer flex flex-col justify-between group">
+                <div class="flex justify-between items-center w-full">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-cyan-700" data-i18n="tileFreshTitle">Новотільні</span>
+                    <span id="tileFreshPct" v-text="dashboard.pctFresh + '%'" class="text-[10px] font-semibold text-cyan-700 bg-cyan-100/80 px-1.5 py-0.5 rounded-full">0%</span>

@@ -1,0 +1,842 @@
+    <!-- MODAL: COW 360° PROFILE -->
+    <div id="cowModal" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl font-bold">
+                        🐮
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900" id="mCowTitle">Картка корови № 0000</h3>
+                        <p class="text-xs text-slate-500" id="mCowSubtitle">UA 00000000 • Група 1</p>
+                    </div>
+                </div>
+                <button onclick="closeCowModal()" class="text-slate-400 hover:text-slate-600 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Modal Content with tabs -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-6">
+                <!-- Info cards -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <div>
+                        <span class="text-slate-500 block">Робочий номер:</span>
+                        <input id="mEditNumber" class="font-bold text-slate-900 bg-white border border-slate-300 rounded px-2 py-1 mt-0.5 w-full">
+                    </div>
+                    <div>
+                        <span class="text-slate-500 block">Офіційна бирка:</span>
+                        <input id="mEditTag" class="font-medium text-slate-900 bg-white border border-slate-300 rounded px-2 py-1 mt-0.5 w-full">
+                    </div>
+                    <div>
+                        <span class="text-slate-500 block">Кличка:</span>
+                        <input id="mEditName" class="font-medium text-slate-900 bg-white border border-slate-300 rounded px-2 py-1 mt-0.5 w-full">
+                    </div>
+                    <div>
+                        <span class="text-slate-500 block">Статус:</span>
+                        <select id="mEditStatus" class="font-bold bg-white border border-slate-300 rounded px-2 py-1 mt-0.5 w-full">
+                            <option value="Active">Active</option>
+                            <option value="Pregnant">Pregnant</option>
+                            <option value="Dry">Dry</option>
+                            <option value="Inseminated">Inseminated</option>
+                            <option value="Fresh">Fresh</option>
+                            <option value="Culled">Culled</option>
+                        </select>
+                    </div>
+                    <div>
+                        <span class="text-slate-500 block">Номер лактації:</span>
+                        <input id="mEditLactation" type="number" class="font-bold text-slate-900 bg-white border border-slate-300 rounded px-2 py-1 mt-0.5 w-full">
+                    </div>
+                    <div>
+                        <span class="text-slate-500 block">Дата народження:</span>
+                        <input id="mEditBirth" type="date" class="font-medium text-slate-900 bg-white border border-slate-300 rounded px-2 py-1 mt-0.5 w-full">
+                    </div>
+                    <div>
+                        <span class="text-slate-500 block">Останній отел:</span>
+                        <input id="mEditLastCalv" type="date" class="font-medium text-slate-900 bg-white border border-slate-300 rounded px-2 py-1 mt-0.5 w-full">
+                    </div>
+                    <div>
+                        <span class="text-slate-500 block">Очікуваний отел:</span>
+                        <input id="mEditExpCalv" type="date" class="font-medium text-slate-900 bg-white border border-slate-300 rounded px-2 py-1 mt-0.5 w-full">
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2">
+                    <button onclick="saveCowEdits()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-sm">
+                        <i class="fa-solid fa-floppy-disk"></i> Зберегти зміни
+                    </button>
+                </div>
+
+                <!-- Action buttons: Add Treatment or Repro Event -->
+                <div class="flex gap-3 border-t border-slate-200 pt-4">
+                    <button onclick="openAddReproModal()" class="flex-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-venus-mars"></i> Зафіксувати подію відтворення
+                    </button>
+                    <button onclick="openAddHealthModal()" class="flex-1 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-syringe"></i> Додати лікування / каренцію
+                    </button>
+                </div>
+
+                <!-- Reproduction history -->
+                <div class="space-y-2">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-2">
+                        <i class="fa-solid fa-timeline"></i> Історія відтворення
+                    </h4>
+                    <div id="mReproTimeline" class="space-y-2 text-xs"></div>
+                </div>
+
+                <!-- Health history -->
+                <div class="space-y-2">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-2">
+                        <i class="fa-solid fa-notes-medical"></i> Ветеринарна історія та каренція
+                    </h4>
+                    <div id="mHealthTimeline" class="space-y-2 text-xs"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD / EDIT REPRO EVENT -->
+    <div id="reproModal" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-900 text-sm">Подія відтворення</h3>
+                <button onclick="closeModal('reproModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="submitReproEvent(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Тип події</label>
+                    <select id="reproType" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900">
+                        <option value="INSEMINATION">Осіменіння (Insemination)</option>
+                        <option value="PREGNANCY_CHECK">Перевірка тільності (Pregnancy Check)</option>
+                        <option value="HEAT">Охота (Heat / Standing)</option>
+                        <option value="CALVING">Отел (Calving)</option>
+                        <option value="DRY_OFF">Запуск (Dry-off)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Дата події</label>
+                    <input id="reproDate" type="date" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Код бугая / Спермодоза</label>
+                    <input id="reproBull" type="text" placeholder="UA 10293847 БЕТХОВЕН" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Результат огляду</label>
+                    <select id="reproResult" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900">
+                        <option value="">Не застосовується</option>
+                        <option value="POSITIVE">Тільна (Positive)</option>
+                        <option value="NEGATIVE">Ялова / Пуста (Negative)</option>
+                        <option value="SUSPICIOUS">Сумнівна (Suspicious)</option>
+                        <option value="TWINS">Двійня (Twins)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Примітки</label>
+                    <textarea id="reproNotes" rows="2" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900"></textarea>
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-xl shadow-sm">
+                    Зафіксувати подію
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD HEALTH / TREATMENT EVENT -->
+    <div id="healthModal" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-900 text-sm">Ветеринарне лікування та каренція</h3>
+                <button onclick="closeModal('healthModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="submitHealthEvent(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Дата лікування</label>
+                    <input id="healthDate" type="date" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Діагноз</label>
+                    <input id="healthDiagnosis" type="text" placeholder="Мастит, Ендометрит, Парез..." required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Препарат / Медикамент</label>
+                    <select id="healthMedSelect" onchange="autoFillWithholding()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900">
+                        <option value="">Оберіть зі списку або введіть вручну...</option>
+                    </select>
+                    <input id="healthMedName" type="text" placeholder="Назва препарату" class="mt-1 w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Каренція молока (днів)</label>
+                        <input id="healthMilkDays" type="number" value="0" min="0" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-bold text-rose-600">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Каренція м'яса (днів)</label>
+                        <input id="healthMeatDays" type="number" value="0" min="0" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Дозування & Примітки</label>
+                    <textarea id="healthNotes" rows="2" placeholder="20 мл внутрішньом'язово..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900"></textarea>
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-xl shadow-sm">
+                    Зберегти лікування & активувати каренцію
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD / EDIT MEDICATION -->
+    <div id="addMedModal" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-900 text-sm">Додати препарат у ветеринарну аптечку</h3>
+                <button onclick="closeModal('addMedModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="submitNewMedication(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Назва препарату *</label>
+                    <input id="newMedName" type="text" placeholder="Амоксицилін 15%, Кетлмастер..." required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-bold">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Діюча речовина</label>
+                    <input id="newMedSubstance" type="text" placeholder="Амоксициліну тригідрат" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Номер партії</label>
+                        <input id="newMedBatch" type="text" placeholder="LOT-2026-A" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Термін придатності</label>
+                        <input id="newMedExp" type="date" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Кількість залишку</label>
+                        <input id="newMedStock" type="number" step="0.1" value="10" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Одиниця</label>
+                        <select id="newMedUnit" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900">
+                            <option value="дози">дози</option>
+                            <option value="мл">мл</option>
+                            <option value="флакони">флакони</option>
+                            <option value="кг">кг</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Каренція молока (днів)</label>
+                        <input id="newMedMilk" type="number" value="0" min="0" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-bold text-rose-600">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Каренція м'яса (днів)</label>
+                        <input id="newMedMeat" type="number" value="0" min="0" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Інструкції / Показання</label>
+                    <textarea id="newMedInstructions" rows="2" placeholder="Застосовувати підшкірно або внутрішньом'язово..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900"></textarea>
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-xl shadow-sm">
+                    Зберегти в аптечку
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD USER -->
+    <div id="addUserModal" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-900 text-sm">Новий користувач системи</h3>
+                <button onclick="closeModal('addUserModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="submitNewUser(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">ПІБ</label>
+                    <input id="newUserName" type="text" placeholder="Іванов Іван" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Email</label>
+                    <input id="newUserEmail" type="email" placeholder="user@dairy-erp.farm" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Пароль</label>
+                    <input id="newUserPassword" type="password" placeholder="••••••••" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Роль</label>
+                    <select id="newUserRole" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900">
+                        <option value="operator">Оператор / Дояр</option>
+                        <option value="veterinarian">Ветеринарний лікар</option>
+                        <option value="superadmin">Адміністратор ферми</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Прив'язка Google Email (опціонально)</label>
+                    <input id="newUserGoogleSub" type="email" placeholder="google.account@gmail.com" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900">
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-xl shadow-sm">
+                    Створити користувача
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD COW -->
+    <div id="addCowModal" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-900 text-sm">Додати нову корову</h3>
+                <button onclick="closeModal('addCowModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="submitNewCow(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Робочий номер *</label>
+                    <input id="newCowNumber" type="text" placeholder="1042" required class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-bold">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Офіційна вушна бирка</label>
+                    <input id="newCowTag" type="text" placeholder="UA 8000123456" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Кличка</label>
+                    <input id="newCowName" type="text" placeholder="Зірка" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Статус</label>
+                        <select id="newCowStatus" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900">
+                            <option value="Active">Active (Дійна)</option>
+                            <option value="Pregnant">Pregnant (Тільна)</option>
+                            <option value="Dry">Dry (Сухостій)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Лактація</label>
+                        <input id="newCowLactation" type="number" value="1" min="0" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900">
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-xl shadow-sm">
+                    Зберегти в базу даних
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: IMPORT UNIFORM-AGRI DATABASE -->
+    <div id="importModal" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-3xl max-w-lg w-full p-8 shadow-2xl space-y-6">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-xl font-bold">
+                        📂
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Імпорт бази Uniform-Agri</h3>
+                        <p class="text-xs text-slate-500">Завантажте резервну копію (.ZIP) або файл (.FDB)</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('importModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center hover:border-emerald-500 transition cursor-pointer bg-slate-50"
+                 onclick="document.getElementById('fdbFileInput').click()">
+                <i class="fa-solid fa-cloud-arrow-up text-3xl text-emerald-600 mb-2"></i>
+                <p class="text-xs font-semibold text-slate-800" id="fileChooseLabel">Клікніть для вибору .FDB, .ZIP або .JSON</p>
+                <p class="text-[11px] text-slate-400 mt-1" id="importPlatformNotice">Автоматична конвертація Firebird або відновлення JSON бекапу</p>
+                <input id="fdbFileInput" type="file" accept=".fdb,.zip,.json" class="hidden" onchange="onFileSelected(this)">
+            </div>
+
+            <!-- In-Modal Error Alert (Visible inside modal, not blurred out) -->
+            <div id="importModalErrorBox" class="hidden bg-rose-50 border border-rose-300 rounded-2xl p-4 text-xs text-rose-800 space-y-1 text-left">
+                <div class="flex items-center gap-2 font-bold text-rose-900">
+                    <i class="fa-solid fa-triangle-exclamation text-rose-600"></i> <span id="importModalErrorTitle">Помилка обробки</span>
+                </div>
+                <p id="importModalErrorMsg" class="text-[11px] leading-relaxed text-rose-700"></p>
+            </div>
+
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Режим імпорту</label>
+                    <select id="importModeSelect" onchange="onImportModeChanged()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 font-medium">
+                        <option value="create_new" selected>Створити як нову окрему ферму (New Farm / Backup)</option>
+                        <option value="merge">Оновити / Злити з поточною базою ферми (Smart Merge)</option>
+                    </select>
+                    <p class="text-[10px] text-emerald-600 font-medium mt-1">✨ Назву ферми буде автоматично зчитано з файлу.</p>
+                </div>
+            </div>
+
+            <div id="importProgress" class="hidden space-y-2.5 bg-slate-50 border border-slate-200 rounded-2xl p-3.5">
+                <div class="flex justify-between items-center text-xs font-semibold text-slate-700">
+                    <span id="importStatusText">Підготовка до завантаження...</span>
+                    <span id="importPercentText" class="text-emerald-600 font-bold">15%</span>
+                </div>
+                <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                    <div id="importProgressBar" class="bg-emerald-500 h-2 rounded-full transition-all duration-500" style="width: 15%"></div>
+                </div>
+                <div id="importStageDetail" class="text-[11px] text-slate-500 flex items-center gap-1.5">
+                    <i class="fa-solid fa-circle-notch fa-spin text-emerald-500 text-[10px]"></i>
+                    <span id="importStageDetailText">З'єднання з сервісом парсингу Firebird...</span>
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <button onclick="closeModal('importModal')" class="flex-1 border border-slate-300 text-slate-700 py-2.5 rounded-xl text-xs font-semibold hover:bg-slate-50">Скасувати</button>
+                <button onclick="executeImportDiffPreview()" id="execDiffBtn" class="hidden flex-1 bg-amber-500 hover:bg-amber-600 text-white py-2.5 rounded-xl text-xs font-semibold shadow-sm flex items-center justify-center gap-1.5">
+                    <i class="fa-solid fa-code-compare"></i> Перевірити зміни (Diff)
+                </button>
+                <button onclick="executeImport()" id="execImportBtn" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-semibold shadow-sm">
+                    Імпортувати ферму
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: GOOGLE AUTH REQUIRED FOR IMPORT (Privacy Guard) -->
+    <div id="importAuthRequiredModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 text-center">
+            <div class="w-14 h-14 mx-auto rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-2xl font-bold">
+                🔐
+            </div>
+            <div class="space-y-1.5">
+                <h3 class="text-lg font-bold text-slate-900">Прив'язка до вашого акаунту</h3>
+                <p class="text-xs text-slate-500 leading-relaxed">
+                    Ви зараз переглядаєте систему як <b>Гість</b>. Щоб ваша база даних та поголів'я не стали публічними і залишалися <b>100% приватними</b>, увійдіть через Google перед завантаженням файлу.
+                </p>
+            </div>
+
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col items-center gap-3">
+                <span class="text-xs font-semibold text-slate-700">Вхід в 1 клік через Google:</span>
+                <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="continue_with" data-shape="pill" data-logo_alignment="left"></div>
+            </div>
+
+            <div class="text-[11px] text-slate-400">
+                Після входу модальне вікно імпорту відкриється автоматично, а дані закріпляться за вашим email.
+            </div>
+
+            <button onclick="closeModal('importAuthRequiredModal')" class="w-full border border-slate-200 text-slate-600 hover:bg-slate-100 py-2.5 rounded-xl text-xs font-semibold transition">
+                Скасувати (Залишитися в демо-режимі)
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL: CREATE NEW FARM -->
+    <div id="newFarmModal" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-tractor text-emerald-600"></i> Створити нову базу ферми
+                </h3>
+                <button onclick="closeModal('newFarmModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="handleCreateFarm(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Назва ферми / господарства</label>
+                    <input id="createFarmName" type="text" required placeholder="напр. ФГ «Молочний Рай»" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900 font-medium">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Код бази (необов'язково)</label>
+                    <input id="createFarmCode" type="text" placeholder="FARM_02" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-900">
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button type="button" onclick="closeModal('newFarmModal')" class="flex-1 border border-slate-300 text-slate-700 py-2 rounded-xl">Скасувати</button>
+                    <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 rounded-xl shadow-sm">Створити</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: SMART DIFF & MERGE PREVIEW -->
+    <div id="diffPreviewModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-3xl max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-lg font-bold">
+                        🔍
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Попередній перегляд змін (Smart Merge Diff)</h3>
+                        <p class="text-xs text-slate-500" id="diffSubtitle">Порівняння бекапу з поточною базою</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('diffPreviewModal')" class="text-slate-400 hover:text-slate-600 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-6 space-y-4 text-xs">
+                <!-- Summary Metrics Bar -->
+                <div class="grid grid-cols-3 gap-3 text-center">
+                    <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-2xl">
+                        <span class="text-[10px] uppercase font-bold text-emerald-700 block">Нові тварини (+)</span>
+                        <span id="diffAddedCount" class="text-xl font-black text-emerald-900">0</span>
+                    </div>
+                    <div class="bg-amber-50 border border-amber-200 p-3 rounded-2xl">
+                        <span class="text-[10px] uppercase font-bold text-amber-700 block">Змінені дані (Δ)</span>
+                        <span id="diffModifiedCount" class="text-xl font-black text-amber-900">0</span>
+                    </div>
+                    <div class="bg-slate-50 border border-slate-200 p-3 rounded-2xl">
+                        <span class="text-[10px] uppercase font-bold text-slate-600 block">Без змін (=)</span>
+                        <span id="diffUnchangedCount" class="text-xl font-black text-slate-800">0</span>
+                    </div>
+                </div>
+
+                <!-- Changes Detail Tables -->
+                <div class="space-y-3">
+                    <h4 class="font-bold text-slate-800 flex items-center gap-1.5">
+                        <i class="fa-solid fa-pen-to-square text-amber-600"></i> Виявлені розбіжності та оновлення:
+                    </h4>
+                    <div class="overflow-x-auto rounded-xl border border-slate-200 max-h-60 overflow-y-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+                                    <th class="p-2.5">Корова №</th>
+                                    <th class="p-2.5">Поле</th>
+                                    <th class="p-2.5 text-rose-600">Поточне в системі</th>
+                                    <th class="p-2.5 text-emerald-600">Нове в бекапі</th>
+                                </tr>
+                            </thead>
+                            <tbody id="diffModifiedTableBody" class="divide-y divide-slate-100 font-mono text-[11px]">
+                                <tr><td colspan="4" class="p-4 text-center text-slate-400">Розбіжностей не виявлено</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-6 py-3 border-t border-slate-200 bg-slate-50 flex justify-end gap-3">
+                <button onclick="closeModal('diffPreviewModal')" class="border border-slate-300 text-slate-700 px-4 py-2 rounded-xl text-xs font-semibold hover:bg-slate-100">Закрити</button>
+                <button onclick="confirmMergeFromDiff()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-xl text-xs font-semibold shadow-sm flex items-center gap-1.5">
+                    <i class="fa-solid fa-check"></i> Затвердити та об'єднати
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- MODAL: FARM PASSPORT & IDENTITY -->
+    <!-- MODAL: FARM PASSPORT & IDENTITY -->
+    <div id="farmPassportModal" class="hidden fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-bold">
+                        🏛️
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-sm">Паспорт господарства</h3>
+                        <p class="text-[11px] text-slate-400">Реквізити господарства та параметри обліку</p>
+                    </div>
+                </div>
+                <button onclick="closeModal('farmPassportModal')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <form onsubmit="handleSaveFarmPassport(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="text-slate-500 block text-[11px] font-semibold mb-1">Назва господарства</label>
+                    <input id="passFarmNameInput" type="text" required
+                           class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-slate-500 block text-[11px] font-semibold mb-1">Керівник / Власник</label>
+                        <input id="passFarmerNameInput" type="text" placeholder="ПІБ керівника"
+                               class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
+                    </div>
+                    <div>
+                        <label class="text-slate-500 block text-[11px] font-semibold mb-1">Населений пункт</label>
+                        <input id="passCityInput" type="text" placeholder="м./с. ..."
+                               class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-slate-500 block text-[11px] font-semibold mb-1">Адреса / Відділок</label>
+                        <input id="passAddressInput" type="text" placeholder="вул. ..."
+                               class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
+                    </div>
+                    <div>
+                        <label class="text-slate-500 block text-[11px] font-semibold mb-1">Контактний телефон</label>
+                        <input id="passPhoneInput" type="text" placeholder="+380..."
+                               class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
+                    </div>
+                </div>
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 flex justify-between items-center">
+                    <div>
+                        <span class="text-slate-700 text-xs font-semibold block" data-i18n="passCurrentHerdLabel">Поточне поголів'я в базі:</span>
+                        <span class="text-[10px] text-slate-400" data-i18n="passCurrentHerdHint">Розраховується автоматично за реєстром корів</span>
+                    </div>
+                    <span id="passCowCount" class="font-black text-emerald-600 text-sm">0 голів</span>
+                </div>
+
+                <!-- Farm Lifecycle Timestamps (Creation & Import) -->
+                <div class="grid grid-cols-2 gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3 text-[11px]">
+                    <div>
+                        <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider mb-0.5 flex items-center gap-1">
+                            <i class="fa-solid fa-calendar-plus text-slate-400"></i> Створено в системі
+                        </span>
+                        <span id="passCreatedAt" class="font-semibold text-slate-700">-</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider mb-0.5 flex items-center gap-1">
+                            <i class="fa-solid fa-file-import text-indigo-500"></i> Останній імпорт бази
+                        </span>
+                        <span id="passImportedAt" class="font-semibold text-indigo-700">-</span>
+                    </div>
+                </div>
+
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="submit" id="btnSavePassport" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl font-semibold flex items-center gap-1.5 transition shadow-sm">
+                        <i class="fa-solid fa-floppy-disk"></i> Зберегти зміни
+                    </button>
+                </div>
+            </form>
+
+            <!-- Danger Zone / Delete Farm inside Passport Modal -->
+            <div class="pt-2 border-t border-slate-100 flex justify-between items-center text-xs">
+                <button onclick="closeModal('farmPassportModal')" class="border border-slate-300 text-slate-700 px-4 py-2 rounded-xl font-semibold hover:bg-slate-50 transition">
+                    Закрити
+                </button>
+                <button id="btnDeleteFarmPassport" onclick="confirmDeleteFromPassport()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 px-3.5 py-2 rounded-xl font-semibold flex items-center gap-1.5 transition">
+                    <i class="fa-solid fa-trash-can"></i> Видалити цю базу
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: VET CHECKLIST VIEW & PRINT -->
+    <div id="vetChecklistModal" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl font-bold">
+                        📋
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900" data-i18n="vetModalTitle">Ветеринарний чекліст • Ранковий обхід стада</h3>
+                        <p class="text-xs text-slate-500" id="vetChecklistSubtitle" data-i18n="vetModalSubtitle">Операційний лист огляду стада</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="window.print()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-print"></i> Друк
+                    </button>
+                    <button onclick="closeModal('vetChecklistModal')" class="text-slate-400 hover:text-slate-600 text-lg">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-6 space-y-6 text-xs">
+                <!-- Section 1: Milk Withholding -->
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between border-b border-rose-100 pb-2">
+                        <h4 class="font-bold text-rose-700 flex items-center gap-2 text-sm">
+                            <i class="fa-solid fa-ban"></i> 1. Бракераж молока (Активна каренція антибіотиків)
+                        </h4>
+                        <span id="vcQuarCount" class="bg-rose-100 text-rose-800 px-2 py-0.5 rounded-full font-bold text-[10px]">0</span>
+                    </div>
+                    <div class="overflow-x-auto rounded-xl border border-slate-200">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+                                    <th class="p-2.5">Корова №</th>
+                                    <th class="p-2.5">Офіційна бирка</th>
+                                    <th class="p-2.5">Діагноз / Причина</th>
+                                    <th class="p-2.5">Препарат</th>
+                                    <th class="p-2.5 text-rose-600">Каренція до</th>
+                                    <th class="p-2.5 text-right">Підпис ветлікаря</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vcQuarTable" class="divide-y divide-slate-100">
+                                <tr><td colspan="6" class="p-4 text-center text-slate-400">Немає корів під каренцією</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Section 2: Pregnancy Check Due -->
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between border-b border-amber-100 pb-2">
+                        <h4 class="font-bold text-amber-700 flex items-center gap-2 text-sm">
+                            <i class="fa-solid fa-stethoscope"></i> 2. Перевірка на тільність (УЗД / Ректально 35-70 днів)
+                        </h4>
+                        <span id="vcPregCount" class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold text-[10px]">0</span>
+                    </div>
+                    <div class="overflow-x-auto rounded-xl border border-slate-200">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+                                    <th class="p-2.5">Корова №</th>
+                                    <th class="p-2.5">Офіційна бирка</th>
+                                    <th class="p-2.5">Дата осіменіння</th>
+                                    <th class="p-2.5">Днів після осім.</th>
+                                    <th class="p-2.5">Результат (Тільна / Холоста)</th>
+                                    <th class="p-2.5 text-right">Дія</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vcPregTable" class="divide-y divide-slate-100">
+                                <tr><td colspan="6" class="p-4 text-center text-slate-400">Немає корів на перевірку</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Section 3: Dry-Off Candidates -->
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between border-b border-emerald-100 pb-2">
+                        <h4 class="font-bold text-emerald-700 flex items-center gap-2 text-sm">
+                            <i class="fa-solid fa-shield-halved"></i> 3. Кандидати на запуск (Сухостій за 60 днів до отелу)
+                        </h4>
+                        <span id="vcDryCount" class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold text-[10px]">0</span>
+                    </div>
+                    <div class="overflow-x-auto rounded-xl border border-slate-200">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+                                    <th class="p-2.5">Корова №</th>
+                                    <th class="p-2.5">Бирка</th>
+                                    <th class="p-2.5">Днів тільності</th>
+                                    <th class="p-2.5 text-emerald-700">Очікуваний отел</th>
+                                    <th class="p-2.5">Консервація вимені (Препарат)</th>
+                                    <th class="p-2.5 text-right">Підтвердження</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vcDryTable" class="divide-y divide-slate-100">
+                                <tr><td colspan="6" class="p-4 text-center text-slate-400">Немає кандидатів на запуск</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-6 py-3 border-t border-slate-200 bg-slate-50 flex justify-between items-center text-xs">
+                <span class="text-slate-400 font-mono">DairyERP Veterinary Module</span>
+                <button onclick="closeModal('vetChecklistModal')" class="border border-slate-300 text-slate-700 px-4 py-2 rounded-xl font-semibold hover:bg-slate-100">Закрити</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: FERTILITY ANALYSIS & EXPECTED CALVING INTERVAL (ECI) TREND -->
+    <div id="fertilityModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/80">
+                <div>
+                    <h3 class="font-extrabold text-slate-900 text-base flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line text-indigo-600"></i> <span data-i18n="fertilityModalTitle">Аналіз відтворення стада (Fertility Analysis & ECI)</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-0.5" data-i18n="fertilityModalSubtitle">Динаміка міжотельного періоду, коефіцієнтів CR / PR та показників заплідненості</p>
+                </div>
+                <button onclick="closeModal('fertilityModal')" class="text-slate-400 hover:text-slate-600 text-lg p-1.5"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="p-6 overflow-y-auto space-y-6 text-xs">
+                <!-- ECI Graphic Card (Similar to Uniform-Agri ECI graph in screenshot) -->
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-slate-800 text-sm" data-i18n="chartEciTrendTitle">Expected Calving Interval (ECI) Trend</span>
+                        <div class="flex items-center gap-3 text-[10px]">
+                            <span class="flex items-center gap-1 text-slate-600"><span class="w-2.5 h-0.5 bg-indigo-600 inline-block"></span> ECI (днів)</span>
+                            <span class="flex items-center gap-1 text-rose-600"><span class="w-2.5 h-0.5 bg-rose-500 inline-block"></span> Верхній ліміт (415 дн.)</span>
+                            <span class="flex items-center gap-1 text-emerald-600"><span class="w-2.5 h-0.5 bg-emerald-500 inline-block"></span> Оптимум (380 дн.)</span>
+                        </div>
+                    </div>
+                    <!-- SVG Chart -->
+                    <div class="w-full bg-white p-3 rounded-xl border border-slate-200">
+                        <svg class="w-full h-44" viewBox="0 0 600 160" preserveAspectRatio="none">
+                            <!-- Upper/Lower threshold lines -->
+                            <line x1="40" y1="35" x2="580" y2="35" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,4" />
+                            <text x="540" y="30" fill="#ef4444" font-size="9" font-family="sans-serif">415 d</text>
+                            
+                            <line x1="40" y1="115" x2="580" y2="115" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4,4" />
+                            <text x="540" y="110" fill="#10b981" font-size="9" font-family="sans-serif">380 d</text>
+                            
+                            <!-- ECI Trend Line -->
+                            <polyline fill="none" stroke="#4f46e5" stroke-width="2.5" points="
+                                50,45 110,65 175,25 240,90 305,95 370,105 435,95 500,38 565,39
+                            " />
+                            <!-- Data points -->
+                            <circle cx="50" cy="45" r="3.5" fill="#4f46e5" />
+                            <circle cx="110" cy="65" r="3.5" fill="#4f46e5" />
+                            <circle cx="175" cy="25" r="3.5" fill="#4f46e5" />
+                            <circle cx="240" cy="90" r="3.5" fill="#4f46e5" />
+                            <circle cx="305" cy="95" r="3.5" fill="#4f46e5" />
+                            <circle cx="370" cy="105" r="3.5" fill="#4f46e5" />
+                            <circle cx="435" cy="95" r="3.5" fill="#4f46e5" />
+                            <circle cx="500" cy="38" r="3.5" fill="#4f46e5" />
+                            <circle cx="565" cy="39" r="3.5" fill="#4f46e5" />
+                            
+                            <!-- X Axis labels -->
+                            <text x="40" y="150" fill="#64748b" font-size="8">09/2023</text>
+                            <text x="165" y="150" fill="#64748b" font-size="8">11/2023</text>
+                            <text x="295" y="150" fill="#64748b" font-size="8">01/2024</text>
+                            <text x="425" y="150" fill="#64748b" font-size="8">03/2024</text>
+                            <text x="545" y="150" fill="#64748b" font-size="8">05/2024</text>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Summary Breakdown Table -->
+                <div class="space-y-2">
+                    <h4 class="font-bold text-slate-800 text-sm">Зведена таблиця параметрів відтворення</h4>
+                    <div class="overflow-x-auto rounded-xl border border-slate-200">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
+                                    <th class="p-2.5">Показник</th>
+                                    <th class="p-2.5">Поточне значення</th>
+                                    <th class="p-2.5">Цільовий орієнтир</th>
+                                    <th class="p-2.5">Статус</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 text-slate-700">
+                                <tr class="hover:bg-slate-50">
+                                    <td class="p-2.5 font-bold">Conception Rate (CR) — заплідненість</td>
+                                    <td class="p-2.5 font-black text-emerald-600">38.5%</td>
+                                    <td class="p-2.5 text-slate-500">> 35%</td>
+                                    <td class="p-2.5"><span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[10px]">В нормі</span></td>
+                                </tr>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="p-2.5 font-bold">Pregnancy Rate (PR) — рівень тільності</td>
+                                    <td class="p-2.5 font-black text-emerald-600">21.5%</td>
+                                    <td class="p-2.5 text-slate-500">> 20%</td>
+                                    <td class="p-2.5"><span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[10px]">Відмінно</span></td>
+                                </tr>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="p-2.5 font-bold">Insemination Rate (IR) — охоплення осіменінням</td>
+                                    <td class="p-2.5 font-black text-indigo-600">58.5%</td>
+                                    <td class="p-2.5 text-slate-500">> 55%</td>
+                                    <td class="p-2.5"><span class="bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded text-[10px]">Стабільно</span></td>
+                                </tr>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="p-2.5 font-bold">Expected Calving Interval (ECI) — міжотельний</td>
+                                    <td class="p-2.5 font-black text-slate-800">412 днів</td>
+                                    <td class="p-2.5 text-slate-500">380-410 днів</td>
+                                    <td class="p-2.5"><span class="bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded text-[10px]">Під наглядом</span></td>
+                                </tr>
+                                <tr class="hover:bg-slate-50">
+                                    <td class="p-2.5 font-bold">Average DIM — дні доїння</td>
+                                    <td class="p-2.5 font-black text-slate-800">168 днів</td>
+                                    <td class="p-2.5 text-slate-500">160-180 днів</td>
+                                    <td class="p-2.5"><span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[10px]">Оптимум</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-6 py-3 border-t border-slate-200 bg-slate-50 flex justify-between items-center text-xs">
+                <span class="text-slate-400 font-mono">Uniform-Agri KPI Engine</span>
+                <button onclick="closeModal('fertilityModal')" class="border border-slate-300 text-slate-700 px-4 py-2 rounded-xl font-semibold hover:bg-slate-100">Закрити</button>
+            </div>
+        </div>
+    </div>
+
