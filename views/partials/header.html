@@ -6,7 +6,7 @@
             </div>
             <div class="min-w-0">
                 <h1 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-1.5 sm:gap-2 group-hover:text-emerald-700 transition leading-tight truncate">
-                    DairyERP
+                    DairyERP <span class="bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-extrabold px-1.5 py-0.2 rounded-md uppercase tracking-wider">DEV</span>
                 </h1>
                 <p class="text-[11px] sm:text-xs text-slate-500 font-medium truncate" data-i18n="headerSubtitle">Управління молочною фермою та облік стада</p>
             </div>
@@ -35,11 +35,6 @@
             <button id="headerBackupBtn" onclick="downloadBackup()" title="Завантажити резервну копію бази даних" class="hidden bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition items-center gap-1.5 border border-slate-200">
                 <i class="fa-solid fa-download text-emerald-600"></i> <span class="hidden sm:inline">Бекап</span>
             </button>
-            <!-- Metric Display Toggle (% vs Голови) -->
-            <button @click="store.toggleMetricMode()" title="Перемикач відображення метрик (% чи кількість голів)" class="flex items-center gap-1 bg-slate-100 hover:bg-slate-200 border border-slate-200 px-2 py-1 rounded-xl text-xs font-bold text-slate-700 transition">
-                <span :class="store.metricMode === 'heads' ? 'text-emerald-700 bg-white px-1.5 py-0.5 rounded-lg shadow-2xs' : 'text-slate-400 px-1'">Гол</span>
-                <span class="text-slate-300">/</span>
-                <span :class="store.metricMode === 'percent' ? 'text-emerald-700 bg-white px-1.5 py-0.5 rounded-lg shadow-2xs' : 'text-slate-400 px-1'">%</span>
-            </button>
+
             <!-- Language Switcher (UA / EN) with search-engine crawlable URLs -->
             <div class="flex items-center bg-slate-100 border border-slate-200 rounded-xl p-0.5 text-xs font-bold">

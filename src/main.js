@@ -77,6 +77,10 @@ export function initApp() {
             if (typeof updateTileHighlight === 'function') {
                 updateTileHighlight(herdModule.statusFilter);
             }
+            const active = /** @type {HTMLElement | null} */ (document.activeElement);
+            if (active && typeof active.blur === 'function') {
+                active.blur();
+            }
         },
 
         async deleteQueueItem(id) {

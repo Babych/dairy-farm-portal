@@ -32,6 +32,15 @@ export const store = reactive({
         localStorage.setItem("dairy_metric_mode", this.metricMode);
     },
 
+    // Technical Settings & Tools dropdown menu state
+    techMenuOpen: false,
+    toggleTechMenu() {
+        this.techMenuOpen = !this.techMenuOpen;
+    },
+    closeTechMenu() {
+        this.techMenuOpen = false;
+    },
+
     // Toasts
     toasts: [],
 
