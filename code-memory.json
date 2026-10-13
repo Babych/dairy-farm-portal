@@ -1,0 +1,47 @@
+{
+  "version": "1.0",
+  "project": "dairy-farm-portal",
+  "symbols": {
+    "zero_trust_iam_tunnel": {
+      "file": "functions/api/gcpAuth.js",
+      "lines": [24, 85],
+      "method": "getGoogleIdToken(targetAudience, saKeyJson)",
+      "contract": "Uses Edge WebCrypto RSASSA-PKCS1-v1_5 SHA-256 to sign Google Service Account JWT and fetch OIDC ID token for Cloud Run (--no-allow-unauthenticated)"
+    },
+    "quarantine_and_action_lists": {
+      "file": "functions/api/repositories/dashboardRepo.js",
+      "lines": [85, 125],
+      "method": "DashboardRepository.getActionLists(farmId)",
+      "contract": "Computes milk quarantine withholding, dry-off candidates, and calving watch in single pass D1 queries"
+    },
+    "offline_pwa_cache": {
+      "file": "src/api/client.js",
+      "lines": [40, 95],
+      "store_name": "animals_cache",
+      "db_name": "DairyErpOfflineDB",
+      "db_version": 2,
+      "methods": [
+        "cacheFarmAnimals(animals)",
+        "getCachedAnimal(id)"
+      ],
+      "contract": "Caches full herd in IndexedDB for 100% offline animal passport 360 lookup"
+    },
+    "outbox_offline_mutations": {
+      "file": "src/api/client.js",
+      "lines": [96, 160],
+      "methods": [
+        "queueOfflineMutation(endpoint, method, payload)",
+        "getOutboxItems()",
+        "deleteOutboxItem(id)",
+        "flushOfflineOutbox()"
+      ],
+      "ui_modal": "#outboxModal in index.html (manage and delete pending mutations)"
+    },
+    "system_import_forwarding": {
+      "file": "functions/api/system.js",
+      "lines": [250, 345],
+      "endpoint": "POST /api/import/uniform",
+      "security": "X-Parser-Secret header and optional Google IAM ID token for private Cloud Run"
+    }
+  }
+}
