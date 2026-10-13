@@ -42,6 +42,15 @@
       "lines": [250, 345],
       "endpoint": "POST /api/import/uniform",
       "security": "X-Parser-Secret header and optional Google IAM ID token for private Cloud Run"
+    },
+    "views_partials": {
+      "directory": "views/partials/",
+      "partials": {
+        "header": "views/partials/header.html",
+        "dashboard": "views/partials/dashboard.html",
+        "modals": "views/partials/modals.html"
+      },
+      "build_verification": "scripts/build-html.js"
     }
   }
 }
