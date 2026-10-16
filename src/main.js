@@ -93,6 +93,18 @@ export function initApp() {
             applyLanguage(getCurrentLang());
             flushOfflineOutbox();
 
+            // Dynamically show DEV badge on dev/preview/local environments
+            const isDevHost = window.location.hostname === 'localhost' ||
+                              window.location.hostname === '127.0.0.1' ||
+                              window.location.hostname.includes('dev.');
+            if (isDevHost) {
+                const badge = document.getElementById('headerDevBadge');
+                if (badge) badge.classList.remove('hidden');
+                if (!document.title.startsWith('[DEV]')) {
+                    document.title = `[DEV] ${document.title}`;
+                }
+            }
+
             // Auto-load data if session exists
             if (store.token) {
                 try {

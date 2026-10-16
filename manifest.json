@@ -1,6 +1,6 @@
 {
-  "name": "DairyERP [DEV] — Облік стада ВРХ",
-  "short_name": "DairyERP [DEV]",
+  "name": "DairyERP — Облік стада ВРХ",
+  "short_name": "DairyERP",
   "description": "Сучасна хмарна система управління молочною фермою (ВРХ) та імпорт баз Uniform-Agri (.FDB / .ZIP)",
   "start_url": "/",
   "display": "standalone",

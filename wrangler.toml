@@ -2,7 +2,25 @@ name = "dairy-farm-portal"
 compatibility_date = "2024-09-23"
 pages_build_output_dir = "."
 
-[[d1_databases]]
+[vars]
+PARSER_SERVICE_URL = "https://dairy-farm-parser-wg7iw37zsq-ey.a.run.app/api/convert/uniform"
+
+# Production Environment (main branch)
+[env.production]
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "dairy-farm-db"
+database_id = "23d5107d-f30f-4a84-9dd7-d4516c9f5f60"
+
+# Preview Environment (dev branch / PRs)
+[env.preview]
+[[env.preview.d1_databases]]
 binding = "DB"
 database_name = "dairy-farm-db-dev"
 database_id = "b12df31e-5bc5-4004-8e62-28d9fa7d86ff"
+
+# Default D1 Binding Fallback
+[[d1_databases]]
+binding = "DB"
+database_name = "dairy-farm-db"
+database_id = "23d5107d-f30f-4a84-9dd7-d4516c9f5f60"
